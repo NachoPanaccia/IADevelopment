@@ -387,7 +387,7 @@ MonoBehaviour:
   - {fileID: 1714001654}
   - {fileID: 1714001652}
   - {fileID: 1714001653}
-  speed: 0
+  speed: 5
   _isDetectable: 1
 --- !u!114 &467448070
 MonoBehaviour:
