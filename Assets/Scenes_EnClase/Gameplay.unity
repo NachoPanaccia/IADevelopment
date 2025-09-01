@@ -844,7 +844,7 @@ MonoBehaviour:
   _distance: 5
   _obstacleMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -949,7 +949,7 @@ GameObject:
   - component: {fileID: 1295189837}
   - component: {fileID: 1295189836}
   - component: {fileID: 1295189835}
-  m_Layer: 9
+  m_Layer: 3
   m_Name: Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
