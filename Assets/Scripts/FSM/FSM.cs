@@ -1,25 +1,19 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Windows;
 
-public class FSM
+public class FSM<T>
 {
-    private Dictionary<PlayerStates, IState> states = new();
+    IState<T> current;
 
-    private IState current;
-
-    public void SetStartState(PlayerStates startingInput)
+    public FSM() { }
+    public FSM(IState<T> current)
     {
-        if (states.TryGetValue(startingInput, out IState newState))
-        {
-            current = newState;
-            current.Enter();
-        }
+        this.current = current;
+        current.Enter();
     }
 
-    public void SetStartState(IState startingState)
+    public void SetInitialState(IState<T> current)
     {
-        current = startingState;
+        this.current = current;
         current.Enter();
     }
 
@@ -28,23 +22,14 @@ public class FSM
         current.Execute();
     }
 
-    public void AddState(PlayerStates input, IState state)
+    public void SetState(T input)
     {
-        states.TryAdd(input, state);
-    }
-
-    public void SetState(PlayerStates input)
-    {
-        if (states.TryGetValue(input, out IState newState))
+        if(current.GetState(input, out IState<T> newState))
         {
-            if (newState != current)
-            {
-                current.Exit();
-                Debug.Log("Exiting:" + current);
-                current = newState;
-                current.Enter();
-                Debug.Log("Entering:" + current);
-            }
+            current.Exit();
+            current = newState;
+            current.Enter();
         }
     }
+
 }

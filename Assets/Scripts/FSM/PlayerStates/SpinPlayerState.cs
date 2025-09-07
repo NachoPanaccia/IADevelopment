@@ -1,26 +1,31 @@
 using UnityEngine;
 
-public class SpinPlayerState : IState
+public class SpinPlayerState : State<PlayerStates>
 {
-    ISpin _spin;
-
-    public SpinPlayerState(ISpin spin)
+    private ISpin _spin;
+    public SpinPlayerState(FSM<PlayerStates> fsm, ISpin spin)
     {
+        _fsm = fsm;
         _spin = spin;
     }
 
-    public void Enter()
+    public override void Enter()
     {
+        base.Enter();
         _spin.Spin();
     }
 
-    public void Execute()
+    public override void Execute()
     {
+        base.Execute();
 
+        if (Input.GetKeyDown(KeyCode.Space))
+            _fsm.SetState(PlayerStates.Idle);
     }
 
-    public void Exit()
+    public override void Exit()
     {
+        base.Exit();
         _spin.Spin();
     }
 }

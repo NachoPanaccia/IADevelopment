@@ -1,21 +1,19 @@
 using UnityEngine;
 
-public class MovePlayerState : IState
+public class MovePlayerState : State<PlayerStates>
 {
-    IMove _move;
+    private IMove _move;
 
-    public MovePlayerState(IMove move)
+    public MovePlayerState(FSM<PlayerStates> fsm, IMove move)
     {
+        _fsm = fsm;
         _move = move;
     }
 
-    public void Enter()
+    public override void Execute()
     {
-        
-    }
+        base.Execute();
 
-    public void Execute()
-    {
         var h = Input.GetAxis("Horizontal");
         var v = Input.GetAxis("Vertical");
         if (h != 0 || v != 0)
@@ -24,10 +22,10 @@ public class MovePlayerState : IState
             _move.Move(dir.normalized);
             _move.Look(dir);
         }
-    }
+        else
+            _fsm.SetState(PlayerStates.Idle);
 
-    public void Exit()
-    {
-
+        if (Input.GetKeyDown(KeyCode.Space))
+            _fsm.SetState(PlayerStates.Spining);
     }
 }
