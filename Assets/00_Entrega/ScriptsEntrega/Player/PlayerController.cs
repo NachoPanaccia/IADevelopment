@@ -1,0 +1,80 @@
+using Unity.IO.LowLevel.Unsafe;
+using UnityEngine;
+
+public class PlayerController : MonoBehaviour
+{
+    [Header("Referencias")]
+    [SerializeField] private PlayerView view;
+
+    [Header("Modelo (datos)")]
+    public PlayerModel model = new PlayerModel();
+
+    // Estrategia de movimiento (se puede reemplazar por CharacterController, Rigidbody, etc.)
+    private IMove moveStrategy;
+
+    // FSM + estados
+    private FSM fsm;
+    private IdleState idleState;
+    private WalkState walkState;
+
+    private void Awake()
+    {
+        if (!view) view = GetComponentInChildren<PlayerView>();
+
+        moveStrategy = new SimpleTransformMove(
+            bodyTransform: transform,
+            model: model,
+            visualRoot: view ? view.ModelRoot : null
+        );
+
+        fsm = new FSM();
+        idleState = new IdleState(this, fsm, model, view);
+        walkState = new WalkState(this, fsm, model, view);
+    }
+
+    private void Start()
+    {
+        fsm.Initialize(idleState);
+    }
+
+    private void Update()
+    {
+        fsm.CurrentState.HandleInput();
+        fsm.CurrentState.LogicUpdate();
+    }
+
+    private void FixedUpdate()
+    {
+        fsm.CurrentState.PhysicsUpdate();
+    }
+
+    // ======= Helpers que usan los estados =======
+
+    // Lee WASD/Arrows con Input clásico
+    public Vector3 ReadMovementInput()
+    {
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
+        return new Vector3(h, 0f, v).normalized;
+    }
+
+    // Convierte el input a espacio de cámara (WASD relativo a cámara)
+    public Vector3 ToCameraSpace(Vector3 inputDir)
+    {
+        if (inputDir.sqrMagnitude < 0.0001f) return Vector3.zero;
+
+        var cam = Camera.main;
+        if (!cam) return inputDir;
+
+        Vector3 camFwd = Vector3.Scale(cam.transform.forward, new Vector3(1, 0, 1)).normalized;
+        Vector3 camRight = Vector3.Scale(cam.transform.right, new Vector3(1, 0, 1)).normalized;
+
+        return (camFwd * inputDir.z + camRight * inputDir.x).normalized;
+    }
+
+    public void Move(Vector3 worldDir) => moveStrategy.Move(worldDir, model.walkSpeed);
+
+    // Accesos que usan los estados para cambiar
+    public IdleState Idle => idleState;
+    public WalkState Walk => walkState;
+}
