@@ -1,16 +1,7 @@
 using UnityEngine;
 
-public class IMove : MonoBehaviour
+public interface IMove
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // direction debe venir normalizado en XZ
+    void Move(Vector3 direction, float speed);
 }
