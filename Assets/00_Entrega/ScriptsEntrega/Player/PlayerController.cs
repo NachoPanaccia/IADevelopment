@@ -1,3 +1,4 @@
+using NUnit.Framework.Interfaces;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
@@ -16,6 +17,9 @@ public class PlayerController : MonoBehaviour
     private FSM fsm;
     private IdleState idleState;
     private WalkState walkState;
+    private RunState runState;
+    private RunToStopState runToStopState;
+    private PunchState punchState;
 
     private void Awake()
     {
@@ -30,6 +34,9 @@ public class PlayerController : MonoBehaviour
         fsm = new FSM();
         idleState = new IdleState(this, fsm, model, view);
         walkState = new WalkState(this, fsm, model, view);
+        runState = new RunState(this, fsm, model, view);        // nuevo
+        runToStopState = new RunToStopState(this, fsm, model, view);  // nuevo
+        punchState = new PunchState(this, fsm, model, view);      // nuevo
     }
 
     private void Start()
@@ -72,9 +79,20 @@ public class PlayerController : MonoBehaviour
         return (camFwd * inputDir.z + camRight * inputDir.x).normalized;
     }
 
-    public void Move(Vector3 worldDir) => moveStrategy.Move(worldDir, model.walkSpeed);
+    public void Move(Vector3 worldDir)  // compat: usa velocidad de caminar por defecto
+    {
+        moveStrategy.Move(worldDir, model.GetSpeed(false));
+    }
+
+    public void Move(Vector3 worldDir, float speed) // para estados que quieran fijar velocidad
+    {
+        moveStrategy.Move(worldDir, speed);
+    }
 
     // Accesos que usan los estados para cambiar
     public IdleState Idle => idleState;
     public WalkState Walk => walkState;
+    public RunState Run => runState;
+    public RunToStopState RunToStop => runToStopState;
+    public PunchState Punch => punchState;
 }

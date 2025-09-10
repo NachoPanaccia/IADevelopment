@@ -1,16 +1,15 @@
 using UnityEngine;
 
-public class IdleState : State
+public class PunchState : State
 {
-    public IdleState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view)
+    public PunchState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view)
         : base(player, fsm, model, view) { }
 
     public override void Enter()
     {
-        view.PlayIdle();
-        view.SetSpeedParam(0f);
-        model.InputVector = Vector3.zero;
-        model.speedFactor = 0f;
+        model.StepFactor(false);
+        player.Move(Vector3.zero);
+        view.PlayPunch();
     }
 
     public override void HandleInput()
@@ -20,12 +19,11 @@ public class IdleState : State
 
     public override void LogicUpdate()
     {
-        if (Input.GetMouseButtonDown(0))
-        { fsm.ChangeState(player.Punch); return; }
-
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        if (moving)
+        if (view.IsAnimFinished("Punch"))
         {
+            bool moving = model.InputVector.sqrMagnitude > 0.01f;
+            if (!moving) { fsm.ChangeState(player.Idle); return; }
+
             bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             fsm.ChangeState(runKey ? player.Run : player.Walk);
         }
