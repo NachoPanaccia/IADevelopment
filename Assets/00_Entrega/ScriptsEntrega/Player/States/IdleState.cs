@@ -2,8 +2,7 @@ using UnityEngine;
 
 public class IdleState : State
 {
-    public IdleState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view)
-        : base(player, fsm, model, view) { }
+    public IdleState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
 
     public override void Enter()
     {
