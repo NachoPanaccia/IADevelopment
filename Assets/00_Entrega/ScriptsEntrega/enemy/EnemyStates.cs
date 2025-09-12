@@ -1,5 +1,6 @@
 public enum EnemyStates
 {
     Patrulla,
-    Huir
+    Huir,
+    Idle
 }

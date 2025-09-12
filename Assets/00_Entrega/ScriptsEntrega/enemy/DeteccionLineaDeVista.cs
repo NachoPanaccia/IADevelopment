@@ -127,7 +127,7 @@ public class DeteccionLineaDeVista : MonoBehaviour
         {
             objetivoVisible = false;
             objetivoActual = null;
-            Debug.Log($"Objetivo Olvidado");
+           
         }
     }
 

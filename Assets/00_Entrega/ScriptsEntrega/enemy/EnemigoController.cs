@@ -4,23 +4,27 @@ using UnityEngine;
 /// Controlador principal del Enemigo.
 /// - Arma la FSMEnemigo<EnemyStates> y registra los estados/transiciones.
 /// - Corre el ciclo de la FSM en Update().
-/// Requiere: EnemigoModel, FSMEnemigo<T>, EstadoEnemigo<T>, PatrullaEnemigoState, HuirEnemigoState.
+/// Requiere: EnemigoModel, FSMEnemigo<T>, EstadoEnemigo<T>, PatrullaEnemigoState, HuirEnemigoState, IdleEnemigoState.
 /// </summary>
 [RequireComponent(typeof(EnemigoModel))]
 public class EnemigoController : MonoBehaviour
 {
+    [Header("Parámetros de comportamiento")]
+    [SerializeField] private int iteracionesParaIdle = 5;
+    [SerializeField] private float tiempoIdle = 2f;
+
     [Header("Debug (solo lectura)")]
-    [SerializeField] private string estadoActual = "Desconocido"; // para ver en el Inspector
+    [SerializeField] private string estadoActual = "Desconocido"; // visible en el Inspector
 
     // Core
-    private FSMEnemigo<EnemyStates> fsm;   // tu FSM genérica para Enemigo
-    private EnemigoModel modelo;           // datos y helpers (velocidades, puntos, sensor, etc.)
+    private FSMEnemigo<EnemyStates> fsm;
+    private EnemigoModel modelo;
 
     // Estados
-    private PatrullaEnemigoState patrulla;
-    private HuirEnemigoState huir;
+    private PatrullaEnemigoState estadoPatrulla;
+    private HuirEnemigoState estadoHuir;
+    private IdleEnemigoState estadoIdle;
 
-    // ===== Ciclo de vida =====
     private void Awake()
     {
         // Refs obligatorias
@@ -35,33 +39,39 @@ public class EnemigoController : MonoBehaviour
         // Instanciar FSM y estados
         fsm = new FSMEnemigo<EnemyStates>();
 
-        patrulla = new PatrullaEnemigoState(modelo);
-        huir = new HuirEnemigoState(modelo);
+        estadoPatrulla = new PatrullaEnemigoState(modelo, iteracionesParaIdle);
+        estadoHuir = new HuirEnemigoState(modelo);
+        estadoIdle = new IdleEnemigoState(modelo, tiempoIdle);
 
-        // Inyectar FSM a los estados
-        patrulla.SetFSM(fsm);
-        huir.SetFSM(fsm);
+        // Inyectar FSM en los estados
+        estadoPatrulla.SetFSM(fsm);
+        estadoHuir.SetFSM(fsm);
+        estadoIdle.SetFSM(fsm);
 
         // Transiciones
-        patrulla.AddTransition(EnemyStates.Huir, huir);
-        huir.AddTransition(EnemyStates.Patrulla, patrulla);
+        estadoPatrulla.AddTransition(EnemyStates.Huir, estadoHuir);
+        estadoPatrulla.AddTransition(EnemyStates.Idle, estadoIdle);
+
+        estadoIdle.AddTransition(EnemyStates.Huir, estadoHuir);
+        estadoIdle.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
+
+        estadoHuir.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
 
         // Estado inicial
-        fsm.SetInitialState(patrulla);
+        fsm.SetInitialState(estadoPatrulla);
         estadoActual = "Patrulla";
     }
 
     private void Update()
     {
-        // Avanzar la FSM
         fsm.OnUpdate();
 
-        // Nota: nuestra FSMEnemigo<T> no expone el estado actual.
-        // Para debug simple, inferimos según el sensor (suele coincidir con el comportamiento).
+        // Debug simple del estado actual (heurística por sensor)
         if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
             estadoActual = "Huir";
         else
-            estadoActual = "Patrulla";
+            estadoActual = "Patrulla/Idle";
     }
 }
+
 

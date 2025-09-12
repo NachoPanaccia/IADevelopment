@@ -1,101 +1,132 @@
 ﻿using UnityEngine;
 
-
 /// <summary>
-/// Estado de patrulla: recorre puntos en ping-pong. 
+/// Estado de patrulla: recorre puntos en ping-pong o loop.
 /// Si el sensor ve al jugador, transiciona a Huir.
+/// Pasa a Idle luego de alcanzar 'puntosAntesDeIdle' puntos de patrulla (eventos reales, NO frames).
 /// Requiere: EnemigoModel con puntosPatrulla, Sensor y helpers de movimiento.
 /// </summary>
 public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
 {
-    private readonly EnemigoModel model;
+    private readonly EnemigoModel modelo;
 
-    public PatrullaEnemigoState(EnemigoModel model)
+    // ✅ Nuevo criterio: cuenta puntos alcanzados, no frames
+    private int puntosContados;
+    private readonly int puntosAntesDeIdle;
+
+    public PatrullaEnemigoState(EnemigoModel modelo, int puntosAntesDeIdle = 3)
     {
-        this.model = model;
+        this.modelo = modelo;
+        this.puntosAntesDeIdle = Mathf.Max(1, puntosAntesDeIdle);
     }
 
     public override void Enter()
     {
-        if (model.HabilitarLogs) Debug.Log("[Enemigo] Enter Patrulla");
-        if (model.PuntosPatrulla == null || model.PuntosPatrulla.Length == 0) return;
+        if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Enter Patrulla");
 
         // Normalizar estado interno
-        model.indicePunto = Mathf.Clamp(model.indicePunto, 0, model.PuntosPatrulla.Length - 1);
-        model.tiempoEsperaRestante = Mathf.Max(0f, model.tiempoEsperaRestante);
+        if (modelo.PuntosPatrulla != null && modelo.PuntosPatrulla.Length > 0)
+        {
+            modelo.indicePunto = Mathf.Clamp(modelo.indicePunto, 0, modelo.PuntosPatrulla.Length - 1);
+        }
+        modelo.tiempoEsperaRestante = Mathf.Max(0f, modelo.tiempoEsperaRestante);
+
+        // Reiniciar el contador de "hechos de patrulla"
+        puntosContados = 0;
+
+        // Si no hay puntos, quedate en lugar
+        if (modelo.PuntosPatrulla == null || modelo.PuntosPatrulla.Length == 0)
+        {
+            modelo.MoverXZ(Vector3.zero, 0f);
+        }
     }
 
     public override void Execute()
     {
-        // 1) Si ve/recuerda al jugador -> Huir
-        if (model.Sensor != null && model.Sensor.ObjetivoVisible)
+        // 1) Si ve al jugador -> Huir
+        if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
         {
             fsm.SetState(EnemyStates.Huir);
             return;
         }
 
-        // 2) Patrullaje básico
-        if (model.PuntosPatrulla == null || model.PuntosPatrulla.Length == 0)
+        // 2) Si no hay puntos de patrulla, quedate quieto (no contemos nada)
+        if (modelo.PuntosPatrulla == null || modelo.PuntosPatrulla.Length == 0)
         {
-            model.MoverXZ(Vector3.zero, 0f);
+            modelo.MoverXZ(Vector3.zero, 0f);
             return;
         }
 
-        // Espera opcional en cada punto
-        if (model.tiempoEsperaRestante > 0f)
+        // 3) Espera en punto
+        if (modelo.tiempoEsperaRestante > 0f)
         {
-            model.tiempoEsperaRestante -= Time.deltaTime;
-            model.MoverXZ(Vector3.zero, 0f);
+            modelo.tiempoEsperaRestante -= Time.deltaTime;
+            modelo.MoverXZ(Vector3.zero, 0f);
             return;
         }
 
-        Transform punto = model.PuntosPatrulla[model.indicePunto];
-        Vector3 haciaPunto = punto.position - model.transform.position;
-        Vector3 dir = new Vector3(haciaPunto.x, 0f, haciaPunto.z).normalized;
+        // 4) Moverse al punto actual
+        Transform punto = modelo.PuntosPatrulla[modelo.indicePunto];
+        Vector3 haciaPunto = punto.position - modelo.transform.position;
+        Vector3 dir = new Vector3(haciaPunto.x, 0f, haciaPunto.z);
 
-        // Evitación simple por raycast (definida en EnemigoModel)
-        Vector3 deseada = dir * model.VelocidadPatrulla;
-        Vector3 evit = model.CalcularEvitacion(deseada);
+        if (dir.sqrMagnitude > 0.0001f)
+            dir.Normalize();
+
+        Vector3 deseada = dir * modelo.VelocidadPatrulla;
+        Vector3 evit = modelo.CalcularEvitacion(deseada); // hoy devuelve Vector3.zero
         Vector3 final = deseada + evit;
         if (final.sqrMagnitude > 0.0001f) final.Normalize();
 
-        model.MoverXZ(final, model.VelocidadPatrulla);
-        model.MirarHacia(final);
+        modelo.MoverXZ(final, modelo.VelocidadPatrulla);
+        modelo.MirarHacia(final);
 
-        // Llegada al punto (en XZ)
+        // 5) ¿Llegamos al punto? (distancia plana XZ)
         float distXZ = Vector3.Distance(
-            new Vector3(model.transform.position.x, 0, model.transform.position.z),
+            new Vector3(modelo.transform.position.x, 0, modelo.transform.position.z),
             new Vector3(punto.position.x, 0, punto.position.z));
 
-        if (distXZ <= model.DistanciaLlegada)
+        if (distXZ <= modelo.DistanciaLlegada)
         {
+            // ✅ Contamos un “hecho de patrulla”: punto alcanzado
+            puntosContados++;
+
+            // Siguiente punto + espera
             AvanzarIndice();
-            model.tiempoEsperaRestante = model.TiempoEsperaEnPunto;
+            modelo.tiempoEsperaRestante = modelo.TiempoEsperaEnPunto;
+
+            // ¿Ya alcanzamos suficientes puntos para “descansar”?
+            if (puntosContados >= puntosAntesDeIdle)
+            {
+                if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Patrulla → Idle (por puntos alcanzados)");
+                fsm.SetState(EnemyStates.Idle);
+                return;
+            }
         }
     }
 
-    // Ping-pong: 0→1→2→1→0…
+    // Ping-pong: 0→1→2→1→0…, o loop
     private void AvanzarIndice()
     {
-        if (model.PuntosPatrulla.Length <= 1) return;
+        if (modelo.PuntosPatrulla == null || modelo.PuntosPatrulla.Length <= 1) return;
 
-        if (model.HacerPingPong)
+        if (modelo.HacerPingPong)
         {
-            model.indicePunto += model.direccion;
-            if (model.indicePunto >= model.PuntosPatrulla.Length)
+            modelo.indicePunto += modelo.direccion;
+            if (modelo.indicePunto >= modelo.PuntosPatrulla.Length)
             {
-                model.indicePunto = model.PuntosPatrulla.Length - 2;
-                model.direccion = -1;
+                modelo.indicePunto = modelo.PuntosPatrulla.Length - 2;
+                modelo.direccion = -1;
             }
-            else if (model.indicePunto < 0)
+            else if (modelo.indicePunto < 0)
             {
-                model.indicePunto = 1;
-                model.direccion = 1;
+                modelo.indicePunto = 1;
+                modelo.direccion = 1;
             }
         }
         else
         {
-            model.indicePunto = (model.indicePunto + 1) % model.PuntosPatrulla.Length;
+            modelo.indicePunto = (modelo.indicePunto + 1) % modelo.PuntosPatrulla.Length;
         }
     }
 }
