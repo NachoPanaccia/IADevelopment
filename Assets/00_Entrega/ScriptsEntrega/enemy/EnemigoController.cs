@@ -1,15 +1,15 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// Controlador principal del Enemigo.
 /// - Arma la FSMEnemigo<EnemyStates> y registra los estados/transiciones.
 /// - Corre el ciclo de la FSM en Update().
-/// Requiere: EnemigoModel, FSMEnemigo<T>, EstadoEnemigo<T>, PatrullaEnemigoState, HuirEnemigoState, IdleEnemigoState.
+/// Requiere: EnemigoModel, FSMEnemigo<T>, EstadoEnemigo<T>, PatrullaEnemigoState, HuirEnemigoState, IdleEnemigoState, AttackEnemigoState.
 /// </summary>
 [RequireComponent(typeof(EnemigoModel))]
 public class EnemigoController : MonoBehaviour
 {
-    [Header("Par�metros de comportamiento")]
+    [Header("Parámetros de comportamiento")]
     [SerializeField] private int iteracionesParaIdle = 5;
     [SerializeField] private float tiempoIdle = 2f;
 
@@ -24,6 +24,7 @@ public class EnemigoController : MonoBehaviour
     private PatrullaEnemigoState estadoPatrulla;
     private HuirEnemigoState estadoHuir;
     private IdleEnemigoState estadoIdle;
+    private AttackEnemigoState estadoAttack; // ✅ nuevo
 
     private void Awake()
     {
@@ -42,20 +43,28 @@ public class EnemigoController : MonoBehaviour
         estadoPatrulla = new PatrullaEnemigoState(modelo, iteracionesParaIdle);
         estadoHuir = new HuirEnemigoState(modelo);
         estadoIdle = new IdleEnemigoState(modelo, tiempoIdle);
+        estadoAttack = new AttackEnemigoState(modelo); // ✅ instanciado
 
         // Inyectar FSM en los estados
         estadoPatrulla.SetFSM(fsm);
         estadoHuir.SetFSM(fsm);
         estadoIdle.SetFSM(fsm);
+        estadoAttack.SetFSM(fsm); // ✅
 
         // Transiciones
         estadoPatrulla.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoPatrulla.AddTransition(EnemyStates.Idle, estadoIdle);
+        estadoPatrulla.AddTransition(EnemyStates.Attack, estadoAttack); // ✅
 
         estadoIdle.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoIdle.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
+        estadoIdle.AddTransition(EnemyStates.Attack, estadoAttack); // ✅
 
         estadoHuir.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
+        estadoHuir.AddTransition(EnemyStates.Attack, estadoAttack); // ✅ por si querés que de huir salte a atacar cuando se dé la condición
+
+        estadoAttack.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
+        estadoAttack.AddTransition(EnemyStates.Huir, estadoHuir);
 
         // Estado inicial
         fsm.SetInitialState(estadoPatrulla);
@@ -66,12 +75,7 @@ public class EnemigoController : MonoBehaviour
     {
         fsm.OnUpdate();
 
-        // Debug simple del estado actual (heur�stica por sensor)
-        if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
-            estadoActual = "Huir";
-        else
-            estadoActual = "Patrulla/Idle";
+        // ✅ Debug real del estado actual usando la propia FSM
+        estadoActual = fsm.EstadoActualNombre;
     }
 }
-
-
