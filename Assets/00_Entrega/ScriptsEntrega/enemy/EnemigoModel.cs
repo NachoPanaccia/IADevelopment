@@ -22,6 +22,9 @@ public class EnemigoModel : MonoBehaviour
     [SerializeField] private DeteccionLineaDeVista sensor;     // tu componente de visión
     [SerializeField] private float tiempoHuidaExtra = 1.25f;   // tiempo extra tras olvidar al jugador
 
+    [Header("Ataque")]
+    [SerializeField] private float velocidadAtaque = 7f;
+
     [Header("Depuración")]
     [SerializeField] private bool habilitarLogs = false;
 
@@ -39,6 +42,7 @@ public class EnemigoModel : MonoBehaviour
     public float VelocidadHuida => velocidadHuida;
     public float VelocidadGiro => velocidadGiro;
     public float DistanciaLlegada => distanciaLlegada;
+    public float VelocidadAtaque => velocidadAtaque;
     public Transform[] PuntosPatrulla => puntosPatrulla;
     public bool HacerPingPong => hacerPingPong;
     public float TiempoEsperaEnPunto => tiempoEsperaEnPunto;
