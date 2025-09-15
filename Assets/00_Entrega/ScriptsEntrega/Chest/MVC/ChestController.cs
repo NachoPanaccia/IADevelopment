@@ -4,9 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(ChestView))]
 public class ChestController : MonoBehaviour, IInteractable
 {
+    public static event System.Action<ChestController> OnAnyChestOpened;
+
     [Header("Referencias")]
     [SerializeField] private ChestView view;
-    [SerializeField] private ChestPressedLogic pressedLogic; // opcional
+    [SerializeField] private ChestPressedLogic pressedLogic;
+    [SerializeField] private ChestPromptView promptView;
 
     [Header("Estado")]
     [SerializeField] private bool opened = false;  // ya quedó en Chest_Press
@@ -18,14 +21,16 @@ public class ChestController : MonoBehaviour, IInteractable
     {
         view = GetComponent<ChestView>();
         pressedLogic = GetComponent<ChestPressedLogic>();
+        promptView = GetComponentInChildren<ChestPromptView>();
     }
 
     void Awake()
     {
         if (!view) view = GetComponent<ChestView>();
-        // Aseguramos estado inicial:
-        if (!opened) view.PlayIdle();
-        else view.PlayPress();
+        if (!promptView) promptView = GetComponentInChildren<ChestPromptView>();
+
+        if (!opened) { view.PlayIdle(); promptView?.SetPromptVisible(false); }
+        else { view.PlayPress(); promptView?.SetPromptVisible(false); }
     }
 
     public bool CanInteract(Transform interactor) => !opened && !opening;
@@ -33,6 +38,7 @@ public class ChestController : MonoBehaviour, IInteractable
     public void Interact(Transform interactor)
     {
         if (!CanInteract(interactor)) return;
+        promptView?.SetPromptVisible(false);
         StartCoroutine(OpenRoutine());
     }
 
@@ -40,16 +46,17 @@ public class ChestController : MonoBehaviour, IInteractable
     {
         opening = true;
 
-        // 1) Pasamos a "Open" y esperamos a que termine
         view.PlayOpen();
         yield return new WaitUntil(() => view.IsFinished("Chest_Open"));
 
-        // 2) Pasamos a "Press" y quedamos ahí para siempre
         view.PlayPress();
         opened = true;
         opening = false;
+        
+        promptView?.SetPromptVisible(false);
 
-        // 3) Dispará la lógica de “cofre resuelto”
         if (pressedLogic) pressedLogic.OnChestPressed();
+
+        OnAnyChestOpened?.Invoke(this);
     }
 }
