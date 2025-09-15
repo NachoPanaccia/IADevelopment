@@ -1,11 +1,12 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
 public sealed class ChestPressedLogic : MonoBehaviour
 {
-    // °No cambies el orden!
+    public static event System.Action<ChestDropDB.DropDef, Rarity> OnRewardRolled;
+
     public enum Rarity { Nada = 0, Normal = 1, Rara = 2, Epica = 3, Legendaria = 4 }
 
     [Serializable]
@@ -26,35 +27,37 @@ public sealed class ChestPressedLogic : MonoBehaviour
         new RarityWeight{ rarity = Rarity.Legendaria, weight = 1f  },
     };
 
-    // cache para acceso r·pido por rareza
+    // cache para acceso r√°pido por rareza
     private readonly Dictionary<Rarity, List<ChestDropDB.DropDef>> _byRarity = new();
 
     void Awake()
     {
-        BuildIndex(); // indexa el cat·logo definido en cÛdigo
+        BuildIndex(); // indexa el cat√°logo definido en c√≥digo
     }
 
     public void OnChestPressed()
     {
-        var r = RollRarity();
-        if (r == Rarity.Nada)
+        var chosenRarity = RollRarity();
+        if (chosenRarity == Rarity.Nada)
         {
-            Debug.Log("[Chest] No cayÛ nada (Rareza: Nada).");
+            Debug.Log("[Chest] No cay√≥ nada (Rareza: Nada).");
+            OnRewardRolled?.Invoke(null, Rarity.Nada);
             return;
         }
 
-        var item = PickFromRarity(r);
+        var item = PickFromRarity(chosenRarity); // <- esta es la firma correcta
         if (item == null)
         {
-            Debug.LogWarning($"[Chest] Rareza {r} seleccionada, pero no hay Ìtems de esa rareza en el cat·logo de cÛdigo.");
+            Debug.LogWarning($"[Chest] Rareza {chosenRarity} seleccionada, pero no hay √≠tems de esa rareza.");
+            OnRewardRolled?.Invoke(null, Rarity.Nada);
             return;
         }
 
-        Debug.Log($"[Chest] Premio: {item.name}  (Rareza: {r})");
-        // TODO: ac· instanciar/aÒadir a inventario si querÈs
+        Debug.Log($"[Chest] Premio: {item.name}  (Rareza: {chosenRarity})");
+        OnRewardRolled?.Invoke(item, chosenRarity);
     }
 
-    // ---------- n˙cleo ruleta por rareza ----------
+    // ---------- n√∫cleo ruleta por rareza ----------
     private Rarity RollRarity()
     {
         float total = 0f;
@@ -94,7 +97,7 @@ public sealed class ChestPressedLogic : MonoBehaviour
     private void BuildIndex()
     {
         _byRarity.Clear();
-        foreach (var def in ChestDropDB.All) // cat·logo definido en cÛdigo (no serializado)
+        foreach (var def in ChestDropDB.All) // cat√°logo definido en c√≥digo (no serializado)
         {
             if (def == null) continue;
             if (!_byRarity.TryGetValue(def.rarity, out var list))

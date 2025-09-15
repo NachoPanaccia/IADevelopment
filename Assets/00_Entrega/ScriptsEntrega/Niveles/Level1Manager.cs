@@ -1,27 +1,18 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Level1Manager : MonoBehaviour
 {
     [Header("Tiempo del nivel")]
     [SerializeField, Min(1f)] float levelTimeSeconds = 150f;
 
-    [Header("Escenas")]
-    private string mainMenuSceneName = "Menu Principal"; // nombre exacto de tu menú
-
-    [Header("UI (opcional)")]
-    [SerializeField] ScreenFader fader; // si está asignado, usa fade
-
     [Header("Jugador")]
-    [SerializeField] PlayerHealth playerHealth; // si no lo asignás, se busca en escena
+    [SerializeField] PlayerHealth playerHealth; // si no se asigna, se busca en escena
 
     float _timeLeft;
     int _chestsOpened = 0;
-    bool _hasWon = false;
-    bool _isGameOver = false;
+    bool _isGameOver = false; // derrota
 
     public float TimeLeft => Mathf.Max(0f, _timeLeft);
-    public bool HasWon => _hasWon;
     public bool IsGameOver => _isGameOver;
     public int ChestsOpened => _chestsOpened;
 
@@ -45,7 +36,7 @@ public class Level1Manager : MonoBehaviour
 
     void Update()
     {
-        if (_isGameOver || _hasWon) return;
+        if (_isGameOver) return;
 
         _timeLeft -= Time.deltaTime;
         if (_timeLeft <= 0f)
@@ -54,54 +45,31 @@ public class Level1Manager : MonoBehaviour
 
             if (_chestsOpened <= 0)
             {
-                Lose("Tiempo agotado sin abrir cofres");
+                _isGameOver = true;
+                Debug.Log("Perdiste"); // <- pedido
             }
             else
             {
-                Win("Se abrió al menos un cofre dentro del tiempo");
+                // Victoria por abrir cofre antes del 0. La UI de recompensa ya apareció por evento.
+                Debug.Log("Ganaste");  // <- pedido
             }
         }
     }
 
     void OnChestOpened(ChestController chest)
     {
-        if (_isGameOver || _hasWon) return;
-
+        if (_isGameOver) return;
         _chestsOpened++;
 
-        if (_timeLeft > 0f && _chestsOpened >= 1)
-        {
-            Win("Se abrió al menos un cofre dentro del tiempo");
-        }
+        // Si querés loguear el éxito en el mismo momento (no hace daño):
+        if (_timeLeft > 0f && _chestsOpened == 1)
+            Debug.Log("Ganaste");
     }
 
     void OnPlayerDied()
     {
-        if (_isGameOver || _hasWon) return;
-        Lose("El jugador se quedó sin vida");
-    }
-
-    // ===== Resultados =====
-
-    void Win(string reason)
-    {
-        if (_hasWon || _isGameOver) return;
-        _hasWon = true;
-        Debug.Log("[Level1] Victoria: " + reason);
-        LoadMenu();
-    }
-
-    void Lose(string reason)
-    {
-        if (_isGameOver || _hasWon) return;
+        if (_isGameOver) return;
         _isGameOver = true;
-        Debug.Log("[Level1] Derrota: " + reason);
-        LoadMenu();
-    }
-
-    void LoadMenu()
-    {
-        if (fader != null) fader.FadeOutThenLoad(mainMenuSceneName);
-        else SceneManager.LoadScene(mainMenuSceneName);
+        Debug.Log("Perdiste"); // <- pedido
     }
 }
