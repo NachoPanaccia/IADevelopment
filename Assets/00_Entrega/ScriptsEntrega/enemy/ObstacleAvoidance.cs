@@ -1,79 +1,108 @@
 using UnityEngine;
 
-/// <summary>
-/// Evitación de obstáculos simple via SphereCast (steering behaviour).
-/// - Proyecta una esfera hacia la velocidad deseada y, si choca, devuelve
-///   un vector de empuje lateral para esquivar.
-/// - Si no detecta obstáculos, devuelve Vector3.zero.
-/// </summary>
+[DisallowMultipleComponent]
 public class ObstacleAvoidance : MonoBehaviour
 {
-    [Header("Parámetros")]
-    [SerializeField] private float rangoPrediccion = 2.5f;     // cuánto "mira" hacia adelante
-    [SerializeField] private float radio = 0.5f;               // radio de la esfera de prueba
-    [SerializeField] private LayerMask mascaraObstaculos;      // capas a considerar como obstáculos
-    [SerializeField] private float fuerzaEmpuje = 1.0f;        // peso del vector de evitación
+    [Header("Detección")]
+    [SerializeField] private float rangoPrediccionBase = 2f;   // metros de look-ahead mínimos
+    [SerializeField] private float factorRangoPorVelocidad = 0.15f; // metros extra por cada m/s
+    [SerializeField] private float radio = 0.6f;               // radio del SphereCast
+    [SerializeField] private LayerMask mascaraObstaculos = ~0; // por defecto: todo
 
-    // cache local para debug
-    private Vector3 ultimaVelocidadDeseada;
+    [Header("Respuesta")]
+    [SerializeField] private float pesoEvitacion = 2.0f;       // cuán fuerte empuja al costado
+    [SerializeField] private float atenuarFrente = 0.5f;       // reduce empuje si la normal da muy “de frente”
+    [SerializeField] private bool forzarLateral = true;        // proyecta la normal al plano XZ y perpendicular a la marcha
+
+    [Header("Depuración")]
+    [SerializeField] private bool habilitarLogs = false;
+    [SerializeField] private bool dibujarGizmos = true;
+
+    private Vector3 ultimaVelocidad;
     private RaycastHit ultimoHit;
+    private bool huboHit;
 
     /// <summary>
-    /// Calcula el vector de evitación para una velocidad deseada (XZ).
-    /// Devuelve Vector3.zero si no hay nada por esquivar.
+    /// Devuelve un vector de evitación (en XZ). Si no hay obstáculo, Vector3.zero.
+    /// Pasar acá la velocidad deseada (m/s * dirección).
     /// </summary>
     public Vector3 Evitar(Vector3 velocidadDeseada)
     {
-        ultimaVelocidadDeseada = velocidadDeseada;
+        ultimaVelocidad = velocidadDeseada;
+        huboHit = false;
 
-        // Sin dirección => no evitamos nada
+        // Si no nos estamos moviendo, no hay nada que evitar.
         if (velocidadDeseada.sqrMagnitude < 0.0001f)
             return Vector3.zero;
 
+        // Dirección y distancia de look-ahead.
         Vector3 dir = velocidadDeseada.normalized;
-        float distanciaChequeo = rangoPrediccion * velocidadDeseada.magnitude;
+        float lookAhead = rangoPrediccionBase + factorRangoPorVelocidad * velocidadDeseada.magnitude;
 
-        // SphereCast hacia adelante
-        if (!Physics.SphereCast(transform.position, radio, dir, out ultimoHit, distanciaChequeo, mascaraObstaculos, QueryTriggerInteraction.Ignore))
-            return Vector3.zero;
-
-        // Vector de empuje: apuntamos a alejarnos del obstáculo, solo en XZ
-        Vector3 empuje = (transform.position - ultimoHit.point);
-        empuje.y = 0f;
-
-        if (empuje.sqrMagnitude < 0.0001f)
+        // SphereCast al frente
+        if (Physics.SphereCast(transform.position, radio, dir, out RaycastHit hit, lookAhead, mascaraObstaculos, QueryTriggerInteraction.Ignore))
         {
-            // fallback: empuje lateral ortogonal a la marcha
-            empuje = Vector3.Cross(dir, Vector3.up);
+            huboHit = true;
+            ultimoHit = hit;
+
+            // Normal del obstáculo (aplanada a XZ)
+            Vector3 normal = hit.normal;
+            normal.y = 0f;
+            if (normal.sqrMagnitude < 0.0001f)
+                normal = (transform.position - hit.point).normalized; // fallback
+
+            // Opcional: “forzar” una componente lateral pura si la normal apunta demasiado hacia atrás o adelante
+            if (forzarLateral)
+            {
+                // Eje lateral respecto a la marcha (perpendicular en el plano XZ)
+                Vector3 lateral = Vector3.Cross(Vector3.up, dir).normalized;
+                // Elegimos el lado que más se aleja del obstáculo
+                float lado = Mathf.Sign(Vector3.Dot(lateral, normal));
+                normal = lateral * lado;
+            }
+            else
+            {
+                // Si la normal es muy frontal, la atenuamos para no frenar en seco.
+                float frontal = Mathf.Abs(Vector3.Dot(normal, dir));
+                normal *= Mathf.Lerp(1f, atenuarFrente, frontal);
+            }
+
+            // Peso de evitación
+            Vector3 evitacion = normal * pesoEvitacion;
+            evitacion.y = 0f;
+
+            if (habilitarLogs)
+                Debug.Log($"[ObstacleAvoidance] Esquivando '{hit.collider.name}' a {hit.distance:0.00}m. Normal={hit.normal}, Evitacion={evitacion}");
+
+            return evitacion;
         }
 
-        empuje = empuje.normalized * fuerzaEmpuje;
-        return empuje;
+        return Vector3.zero;
     }
 
-    // Alias para compatibilidad si alguien llama Avoid(...) en inglés.
-    public Vector3 Avoid(Vector3 velocidadDeseada) => Evitar(velocidadDeseada);
-
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
-        // Gizmos de debug (cuando está seleccionado)
+        if (!dibujarGizmos) return;
+
+        // Dibujar look-ahead con datos actuales
+        Vector3 dir = (ultimaVelocidad.sqrMagnitude > 0.0001f) ? ultimaVelocidad.normalized : transform.forward;
+        float lookAhead = rangoPrediccionBase + factorRangoPorVelocidad * ultimaVelocidad.magnitude;
+
         Gizmos.color = Color.green;
-        Vector3 dir = ultimaVelocidadDeseada.sqrMagnitude > 0.0001f ? ultimaVelocidadDeseada.normalized : transform.forward;
-        float distanciaChequeo = rangoPrediccion * Mathf.Max(0.5f, ultimaVelocidadDeseada.magnitude);
+        Gizmos.DrawRay(transform.position, dir * lookAhead);
+        Gizmos.DrawWireSphere(transform.position + dir * lookAhead, radio);
 
-        // línea de proyección
-        Gizmos.DrawLine(transform.position, transform.position + dir * distanciaChequeo);
-
-        // esfera de origen
-        Gizmos.DrawWireSphere(transform.position, radio);
-
-        // punto de impacto
-        if (ultimoHit.collider != null)
+        // Punto de impacto
+        if (huboHit)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(ultimoHit.point, 0.15f);
+            Gizmos.DrawWireSphere(ultimoHit.point, 0.1f);
+            Gizmos.DrawRay(ultimoHit.point, ultimoHit.normal); // normal del obstáculo
         }
+
+        // Radio instantáneo alrededor
+        Gizmos.color = new Color(0f, 0.3f, 0f, 0.7f);
+        Gizmos.DrawWireSphere(transform.position, radio);
     }
-#endif
 }
+
