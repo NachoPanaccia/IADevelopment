@@ -15,19 +15,20 @@ public class IdleEnemigoState : EstadoEnemigo<EnemyStates>
     public override void Enter()
     {
         temporizador = 0f;
-        // detener completamente en XZ, manteniendo Y física
-        modelo.MoverXZ(Vector3.zero, 0f);
+        modelo.MoverXZ(Vector3.zero, 0f); // detenerse
         if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Enter Idle");
-        Debug.Log("llegamos aa idle");
     }
 
     public override void Execute()
     {
-
-        // Si detecta al jugador, pasa a Huir inmediatamente
+        // Si detecta al jugador, random: par ? Huir, impar ? Attack
         if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
         {
-            fsm.SetState(EnemyStates.Huir);
+            int tiro = Random.Range(0, 1000000);
+            bool esPar = (tiro % 2) == 0;
+            if (modelo.HabilitarLogs) Debug.Log($"[Enemigo][Idle] Detectó jugador. Random={tiro} ? {(esPar ? "Huir" : "Attack")}");
+
+            fsm.SetState(esPar ? EnemyStates.Huir : EnemyStates.Attack);
             return;
         }
 

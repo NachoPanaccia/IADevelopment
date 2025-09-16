@@ -2,14 +2,13 @@ using UnityEngine;
 
 /// <summary>
 /// Estado de ataque: persigue al jugador con steering behaviour (Seek/Pursuit).
-/// Si llega a distancia de ataque, ejecuta la acción de “matar jugador” (termina el juego).
-/// Requiere: EnemigoModel con Sensor configurado y métodos MoverXZ/MirarHacia/CalcularEvitacion/VelocidadAtaque.
+/// Si llega a distancia de ataque, termina el juego.
 /// </summary>
 public class AttackEnemigoState : EstadoEnemigo<EnemyStates>
 {
     private readonly EnemigoModel modelo;
-    [SerializeField] private float distanciaAtaque = 2f;   // configurable si lo exponés
-    [SerializeField] private float prediccionTiempo = 0.5f; // tiempo de look-ahead para Pursuit
+    private readonly float distanciaAtaque;
+    private readonly float prediccionTiempo;
 
     public AttackEnemigoState(EnemigoModel modelo, float distanciaAtaque = 2f, float prediccionTiempo = 0.5f)
     {
@@ -27,14 +26,13 @@ public class AttackEnemigoState : EstadoEnemigo<EnemyStates>
     {
         if (modelo.Sensor == null || modelo.Sensor.ObjetivoActual == null)
         {
-            // Si no hay objetivo, o se perdió, volvemos a patrulla
             fsm.SetState(EnemyStates.Patrulla);
             return;
         }
 
         Transform objetivo = modelo.Sensor.ObjetivoActual;
 
-        // --- Pursuit: predecir la posición futura del jugador usando su velocidad ---
+        // Pursuit: predecir la posición futura del jugador usando su velocidad si la tiene
         Vector3 posPrevista = objetivo.position;
         Rigidbody rbJugador = objetivo.GetComponent<Rigidbody>();
         if (rbJugador != null)
@@ -42,21 +40,20 @@ public class AttackEnemigoState : EstadoEnemigo<EnemyStates>
             posPrevista += rbJugador.linearVelocity * prediccionTiempo;
         }
 
-        // Dirección deseada (Seek hacia la posición prevista)
+        // Dirección deseada (Seek) + evitación opcional
         Vector3 dir = (posPrevista - modelo.transform.position);
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.0001f) dir.Normalize();
 
         Vector3 deseada = dir * modelo.VelocidadAtaque;
-        Vector3 evit = modelo.CalcularEvitacion(deseada); // si está desactivada, devuelve Vector3.zero
+        Vector3 evit = modelo.CalcularEvitacion(deseada);
         Vector3 final = deseada + evit;
         if (final.sqrMagnitude > 0.0001f) final.Normalize();
 
-        // Aplicar movimiento
         modelo.MoverXZ(final, modelo.VelocidadAtaque);
         modelo.MirarHacia(final);
 
-        // ¿Está a distancia de ataque?
+        // Ataque si está cerca
         float dist = Vector3.Distance(
             new Vector3(modelo.transform.position.x, 0f, modelo.transform.position.z),
             new Vector3(posPrevista.x, 0f, posPrevista.z));
@@ -66,9 +63,9 @@ public class AttackEnemigoState : EstadoEnemigo<EnemyStates>
             if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Atacó al jugador. GAME OVER.");
 
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false; // detener play en editor
+            UnityEditor.EditorApplication.isPlaying = false;
 #else
-            Application.Quit(); // cerrar app en build
+            Application.Quit();
 #endif
         }
     }

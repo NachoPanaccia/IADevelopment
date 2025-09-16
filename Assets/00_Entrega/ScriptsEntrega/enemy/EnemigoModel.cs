@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// Modelo y helpers del enemigo. SIN ObstacleAvoidance.
-/// Mantiene la API CalcularEvitacion() para no romper estados, pero devuelve Vector3.zero.
+/// Modelo y helpers del enemigo. Incluye velocidad de ataque y evitación opcional.
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class EnemigoModel : MonoBehaviour
@@ -19,11 +18,11 @@ public class EnemigoModel : MonoBehaviour
     [SerializeField] private float tiempoEsperaEnPunto = 0.25f;
 
     [Header("Detección / Huida")]
-    [SerializeField] private DeteccionLineaDeVista sensor;     // tu componente de visión
+    [SerializeField] private DeteccionLineaDeVista sensor;     // tu componente de FOV/visión
     [SerializeField] private float tiempoHuidaExtra = 1.25f;   // tiempo extra tras olvidar al jugador
 
     [Header("Ataque")]
-    [SerializeField] private float velocidadAtaque = 7f;
+    [SerializeField] private float velocidadAtaque = 7f;       // ✔ velocidad usada por el estado Attack
 
     [Header("Depuración")]
     [SerializeField] private bool habilitarLogs = false;
@@ -42,13 +41,13 @@ public class EnemigoModel : MonoBehaviour
     public float VelocidadHuida => velocidadHuida;
     public float VelocidadGiro => velocidadGiro;
     public float DistanciaLlegada => distanciaLlegada;
-    public float VelocidadAtaque => velocidadAtaque;
     public Transform[] PuntosPatrulla => puntosPatrulla;
     public bool HacerPingPong => hacerPingPong;
     public float TiempoEsperaEnPunto => tiempoEsperaEnPunto;
     public float TiempoHuidaExtra => tiempoHuidaExtra;
     public DeteccionLineaDeVista Sensor => sensor;
     public bool HabilitarLogs => habilitarLogs;
+    public float VelocidadAtaque => velocidadAtaque;
 
     private void Awake()
     {
@@ -63,7 +62,7 @@ public class EnemigoModel : MonoBehaviour
     {
         direccionXZ.y = 0f;
         direccionXZ = direccionXZ.normalized * velocidad;
-        direccionXZ.y = rb.linearVelocity.y; // coherente con PlayerModel
+        direccionXZ.y = rb.linearVelocity.y; // coherente con PlayerModel en Unity 6
         rb.linearVelocity = direccionXZ;
     }
 
@@ -77,10 +76,14 @@ public class EnemigoModel : MonoBehaviour
     }
 
     /// <summary>
-    /// SIN evitación: se mantiene para no romper estados; devuelve Vector3.zero.
+    /// Calcula el vector de evitación a partir de un componente ObstacleAvoidance si existe.
+    /// Si no existe, devuelve Vector3.zero (sin evitación).
     /// </summary>
     public Vector3 CalcularEvitacion(Vector3 velocidadDeseada)
     {
+        var avoider = GetComponent<ObstacleAvoidance>();
+        if (avoider != null)
+            return avoider.Evitar(velocidadDeseada); // también acepta Avoid(...)
         return Vector3.zero;
     }
 }
