@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Patrulla entre puntos. Si detecta al jugador, tira un random:
-/// - Par  → Huir
-/// - Impar → Attack
-/// </summary>
+
+///  Estado de patrulla: viaja entre puntos, si llega al final vamos lo hacemos al revez 
+
+
 public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
 {
     private readonly EnemigoModel modelo;
@@ -14,13 +13,15 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
     public PatrullaEnemigoState(EnemigoModel modelo, int iteracionesParaIdle = 5)
     {
         this.modelo = modelo;
-        this.iteracionesParaIdle = Mathf.Max(0, iteracionesParaIdle);
+        this.iteracionesParaIdle = Mathf.Max(0, iteracionesParaIdle); 
     }
 
     public override void Enter()
     {
         if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Enter Patrulla");
         contadorIteraciones = 0;
+
+       
         if (modelo.PuntosPatrulla == null || modelo.PuntosPatrulla.Length == 0) return;
         modelo.indicePunto = Mathf.Clamp(modelo.indicePunto, 0, modelo.PuntosPatrulla.Length - 1);
         modelo.tiempoEsperaRestante = 0f;
@@ -28,7 +29,8 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
 
     public override void Execute()
     {
-        // 1) Si detecta al jugador, decide por random → Huir o Attack
+        // si ve al jugador, decide en el acto
+        // hacemos esto para decidir si vamos a atacar o vamos a huir
         if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
         {
             int tiro = Random.Range(0, 1000000);
@@ -39,33 +41,34 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
             return;
         }
 
-        // 2) Patrullar normalmente
+        // si no hay púntos de patrulla no hacemos nada
         if (modelo.PuntosPatrulla == null || modelo.PuntosPatrulla.Length == 0)
             return;
 
+        // objetivo actual de patrulla
         Transform objetivo = modelo.PuntosPatrulla[modelo.indicePunto];
         Vector3 dir = (objetivo.position - modelo.transform.position);
         dir.y = 0f;
 
-        // Llegada al punto
+        // llegó al punto
         if (dir.magnitude <= modelo.DistanciaLlegada)
         {
-            // esperar
             if (modelo.tiempoEsperaRestante <= 0f)
             {
-                contadorIteraciones++;
-                AvanzarIndice();
-                modelo.tiempoEsperaRestante = modelo.TiempoEsperaEnPunto;
+                contadorIteraciones++;         // contamos  para decidir ir a Idle
+                AvanzarIndice();               // pasamos al próximo punto o rebotamos
+                modelo.tiempoEsperaRestante = modelo.TiempoEsperaEnPunto; // hacemos una mini espera
             }
             else
             {
+                // no nos movemos en espera
                 modelo.tiempoEsperaRestante -= Time.deltaTime;
                 modelo.MoverXZ(Vector3.zero, 0f);
             }
         }
         else
         {
-            // Movimiento con suavizado + evitación opcional
+            // nos movemos al siguiente punto evitando obstaculos
             Vector3 deseada = dir.normalized * modelo.VelocidadPatrulla;
             Vector3 evit = modelo.CalcularEvitacion(deseada);
             Vector3 final = deseada + evit;
@@ -75,7 +78,7 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
             modelo.MirarHacia(final);
         }
 
-        // 3) Pasar a Idle cada X iteraciones
+        // cada X llegadas, metemos un Idle para variar comportamiento
         if (contadorIteraciones >= iteracionesParaIdle && iteracionesParaIdle > 0)
         {
             fsm.SetState(EnemyStates.Idle);
@@ -88,6 +91,8 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
             return;
 
         int i = modelo.indicePunto + modelo.direccion;
+
+        // rebotamos en extremos
         if (modelo.HacerPingPong)
         {
             if (i >= modelo.PuntosPatrulla.Length)
@@ -101,9 +106,11 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
         }
         else
         {
+            // modo loop vuelve a 0 al pasar el último
             if (i >= modelo.PuntosPatrulla.Length) i = 0;
             if (i < 0) i = modelo.PuntosPatrulla.Length - 1;
         }
+
         modelo.indicePunto = Mathf.Clamp(i, 0, modelo.PuntosPatrulla.Length - 1);
     }
 

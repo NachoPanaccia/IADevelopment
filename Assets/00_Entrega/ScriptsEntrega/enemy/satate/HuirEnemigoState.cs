@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Estado de huida: corre en dirección contraria al jugador y evita obstáculos por raycast.
-/// Continúa mientras el sensor lo tenga (visión/memoria). Cuando lo olvida, corre un extra y vuelve a Patrulla.
-/// </summary>
+
+/// Estado de huida: corre en dirección contraria al jugador y evita obstáculos
+/// Corre cuando lo ve y cando lo olvida, corre un extra y vuelve a Patrulla
 public class HuirEnemigoState : EstadoEnemigo<EnemyStates>
 {
     private readonly EnemigoModel model;
-    private float tiempoExtra; // tiempo acumulado luego de que el sensor "olvida" al jugador
+    private float tiempoExtra; // tiempo acumulado luego de que el sensor olvida al jugador
 
     public HuirEnemigoState(EnemigoModel model)
     {
@@ -17,15 +16,15 @@ public class HuirEnemigoState : EstadoEnemigo<EnemyStates>
     public override void Enter()
     {
         if (model.HabilitarLogs) Debug.Log("[Enemigo] Enter Huir");
-        tiempoExtra = 0f;
+        tiempoExtra = 0f; 
     }
 
     public override void Execute()
     {
-        // Control de memoria + extra:
+        //Control de memoria + tiempo extra 
         if (model.Sensor == null)
         {
-            // Sin sensor: huir un toque y volver
+            
             tiempoExtra += Time.deltaTime;
             if (tiempoExtra >= model.TiempoHuidaExtra)
             {
@@ -37,12 +36,12 @@ public class HuirEnemigoState : EstadoEnemigo<EnemyStates>
         {
             if (model.Sensor.ObjetivoVisible)
             {
-                // Mientras lo vea o lo recuerde, resetea el extra
+                // Mientras lo vea, no sumamos extra 
                 tiempoExtra = 0f;
             }
             else
             {
-                // El sensor ya "olvidó": empezar a contar extra
+                // Ya no lo ve escapamos un poco mas 
                 tiempoExtra += Time.deltaTime;
                 if (tiempoExtra >= model.TiempoHuidaExtra)
                 {
@@ -52,28 +51,30 @@ public class HuirEnemigoState : EstadoEnemigo<EnemyStates>
             }
         }
 
-        // Movimiento de huida
+        // Flee Corremos en direccion contraria
         Vector3 dir = Vector3.zero;
         if (model.Sensor != null && model.Sensor.ObjetivoActual != null)
         {
+            // vector desde el jugador al enemy 
             dir = (model.transform.position - model.Sensor.ObjetivoActual.position);
-            dir.y = 0f;
+            dir.y = 0f; // bloqueamos eje Y 
             if (dir.sqrMagnitude > 0.0001f) dir.Normalize();
         }
 
-        // Evitación simple
-        Vector3 deseada = dir * model.VelocidadHuida;
-        Vector3 evit = model.CalcularEvitacion(deseada);
-        Vector3 final = deseada + evit;
+        // Evitamos los obstaculos 
+        Vector3 deseada = dir * model.VelocidadHuida;       // velocidad Flee
+        Vector3 evit = model.CalcularEvitacion(deseada);    // corrección de obstáculos
+        Vector3 final = deseada + evit;                     // mezcla ambas
         if (final.sqrMagnitude > 0.0001f) final.Normalize();
 
-        model.MoverXZ(final, model.VelocidadHuida);
-        model.MirarHacia(final);
+        // Aplicamos movimiento y rotamos para q vea para el lado correcto
+        model.MoverXZ(final, model.VelocidadHuida); // mueve en XZ con velocidad de huida
+        model.MirarHacia(final);                    // rota hacia donde corre
     }
 
     public override void Exit()
     {
         if (model.HabilitarLogs) Debug.Log("[Enemigo] Exit Huir → Patrulla");
-        model.MoverXZ(Vector3.zero, 0f);
+        model.MoverXZ(Vector3.zero, 0f); // frenamos 
     }
 }

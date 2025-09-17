@@ -1,21 +1,21 @@
 ﻿using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEditor; // Para Handles.DrawSolidArc (solo en Editor)
+using UnityEditor; // esto solo para dibujar el arco en el editor
 #endif
 
-/// <summary>
-/// Detección por línea de vista con FOV, raycast a obstáculos y memoria de visión.
-/// Versión para UN objetivo. Dibuja Gizmos siempre (opcional) y loguea cuando ve al objetivo.
-/// </summary>
+
+/// Sensor de visión: mira en un cono  chequea obstáculos y guarda al jugador.
+
+
 [DisallowMultipleComponent]
 public class DeteccionLineaDeVista : MonoBehaviour
 {
-    // ===== Estado (solo lectura) =====
-    [Header("Estado de detección (solo lectura)")]
-    [SerializeField] private bool objetivoVisible;
-    [SerializeField] private Transform objetivoActual;
-    [SerializeField] private float distanciaAlObjetivo;
+    
+    [Header("Estado de detección")]
+    [SerializeField] private bool objetivoVisible;      
+    [SerializeField] private Transform objetivoActual;  
+    [SerializeField] private float distanciaAlObjetivo; 
     [SerializeField] private Vector3 ultimaPosicionVista;
     [SerializeField] private float tiempoDesdeUltimaVista;
 
@@ -25,24 +25,24 @@ public class DeteccionLineaDeVista : MonoBehaviour
     public Vector3 UltimaPosicionVista => ultimaPosicionVista;
     public float TiempoDesdeUltimaVista => tiempoDesdeUltimaVista;
 
-    // ===== Configuración de visión =====
-    [Header("Percepción por visión")]
-    [SerializeField] private Transform objetivo;              // Asignar Player acá (o Tag)
+    
+    [Header("Parámetros de visión")]
+    [SerializeField] private Transform objetivo;  
     [SerializeField] private float distanciaVision = 12f;
     [SerializeField, Range(1f, 179f)] private float anguloVision = 90f;
     [SerializeField] private float alturaOjos = 1.6f;
     [SerializeField] private LayerMask mascaraObstaculos;
 
-    [Header("Memoria de visión")]
+    [Header("Memoria")]
     [SerializeField] private float tiempoMemoriaVision = 2.0f;
 
-    [Header("Barrido / performance")]
+    [Header("Chequeo por performance")]
     [SerializeField] private float intervaloChequeo = 0.1f;
 
-    [Header("Depuración")]
+    [Header("Debug")]
     [SerializeField] private bool habilitarLogs = true;
     [SerializeField] private bool dibujarGizmos = true;
-    [SerializeField] private bool dibujarSiempre = true;      // <- dibuja aunque no esté seleccionado
+    [SerializeField] private bool dibujarSiempre = true;
     [SerializeField] private Color colorCono = new Color(0f, 1f, 0.2f, 0.25f);
     [SerializeField] private Color colorRayoOK = Color.green;
     [SerializeField] private Color colorRayoBloqueado = Color.red;
@@ -55,16 +55,16 @@ public class DeteccionLineaDeVista : MonoBehaviour
 
     private void Awake()
     {
-        // Si no arrastraste el objetivo, buscar por Tag (una sola vez)
+        
         if (objetivo == null && buscarObjetivoPorTag)
         {
             var go = GameObject.FindWithTag(tagObjetivo);
             if (go != null) objetivo = go.transform;
             if (habilitarLogs && objetivo == null)
-                Debug.LogWarning($"[DeteccionLineaDeVista] No se encontró un objeto con Tag '{tagObjetivo}'. Asigná el objetivo en el Inspector.");
+                Debug.LogWarning($"[DeteccionLineaDeVista] No se encontró un objeto con Tag '{tagObjetivo}'");
         }
 
-        // Asegurar alfa visible del cono
+        // aseguramos que el cono tenga un alfa visible
         if (colorCono.a < 0.1f) colorCono.a = 0.25f;
     }
 
@@ -73,13 +73,14 @@ public class DeteccionLineaDeVista : MonoBehaviour
         tiempoAcumulado += Time.deltaTime;
         tiempoDesdeUltimaVista += Time.deltaTime;
 
+        // hacemos el chequeo cada intervaloChequeo (no todos los frames)
         if (tiempoAcumulado >= intervaloChequeo)
         {
             tiempoAcumulado = 0f;
             ActualizarDeteccion();
         }
 
-        // Línea de depuración en Play
+        // dibuja línea en modo Play para depurar
         if (Application.isPlaying && objetivo != null)
         {
             Debug.DrawLine(ObtenerPuntoVista(), objetivo.position,
@@ -99,13 +100,13 @@ public class DeteccionLineaDeVista : MonoBehaviour
         Vector3 dir = objetivo.position - origenVista;
         float dist = dir.magnitude;
 
-        // Dentro del ángulo y rango
+        // chequeamos rango y ángulo
         if (dist <= distanciaVision && Vector3.Angle(transform.forward, dir) <= anguloVision * 0.5f)
         {
-            // ¿Hay obstáculo bloqueando?
+            // si no hay obstáculo en el medio lo ve
             if (!HayObstaculos(origenVista, objetivo.position))
             {
-                bool antesNoVeia = !objetivoVisible; // para loguear solo en flanco
+                bool antesNoVeia = !objetivoVisible;
                 objetivoVisible = true;
                 objetivoActual = objetivo;
                 distanciaAlObjetivo = dist;
@@ -113,12 +114,12 @@ public class DeteccionLineaDeVista : MonoBehaviour
                 tiempoDesdeUltimaVista = 0f;
 
                 if (habilitarLogs && antesNoVeia)
-                    Debug.Log($"👀 Objetivo detectado: {objetivo.name} a {distanciaAlObjetivo:0.0} m");
+                    Debug.Log($" Objetivo detectado: {objetivo.name} a {distanciaAlObjetivo:0.0} m");
                 return;
             }
         }
 
-        // Si no hay LOS directa, memoria
+        // si no lo ve directo, usa memoria
         if (objetivoActual != null && tiempoDesdeUltimaVista <= tiempoMemoriaVision)
         {
             objetivoVisible = true;
@@ -127,11 +128,10 @@ public class DeteccionLineaDeVista : MonoBehaviour
         {
             objetivoVisible = false;
             objetivoActual = null;
-           
         }
     }
 
-    // ===== Utilitarios =====
+   
     private Vector3 ObtenerPuntoVista()
     {
         Vector3 pos = transform.position;
@@ -147,7 +147,7 @@ public class DeteccionLineaDeVista : MonoBehaviour
         return Physics.Raycast(origen, dir.normalized, dist, mascaraObstaculos, QueryTriggerInteraction.Ignore);
     }
 
-    // ===== Gizmos siempre visibles =====
+    // Gizmos 
     private void OnDrawGizmos()
     {
         if (!dibujarGizmos || !dibujarSiempre) return;
@@ -164,10 +164,8 @@ public class DeteccionLineaDeVista : MonoBehaviour
     {
         Vector3 origenVista = Application.isPlaying ? ObtenerPuntoVista() : transform.position + Vector3.up * alturaOjos;
 
-        // Fallback con líneas si no estamos en Editor
         DibujarConoWire(origenVista, transform.forward, anguloVision, distanciaVision);
 
-        // Línea hacia el objetivo si existe
         if (objetivo != null)
         {
             bool bloqueado = HayObstaculos(origenVista, objetivo.position);
@@ -176,18 +174,15 @@ public class DeteccionLineaDeVista : MonoBehaviour
             Gizmos.DrawSphere(objetivo.position, 0.1f);
         }
 
-        // En Editor, dibujar arco sólido (mucho más visible)
 #if UNITY_EDITOR
         Handles.color = new Color(colorCono.r, colorCono.g, colorCono.b, Mathf.Clamp01(colorCono.a));
         Vector3 forward = transform.forward;
         float medio = anguloVision * 0.5f;
         Vector3 from = Quaternion.Euler(0, -medio, 0) * forward;
-        // DrawSolidArc dibuja en el plano perpendicular al "up" (Vector3.up)
         Handles.DrawSolidArc(origenVista, Vector3.up, from, anguloVision, distanciaVision);
 #endif
     }
 
-    // Cono "alambre" para plataformas fuera del Editor
     private void DibujarConoWire(Vector3 origen, Vector3 forward, float anguloTotal, float radio)
     {
         Gizmos.color = new Color(colorCono.r, colorCono.g, colorCono.b, 0.4f);
@@ -204,7 +199,6 @@ public class DeteccionLineaDeVista : MonoBehaviour
             prev = punto;
         }
 
-        // bordes del cono
         Gizmos.DrawLine(origen, origen + (Quaternion.AngleAxis(-medio, Vector3.up) * forward) * radio);
         Gizmos.DrawLine(origen, origen + (Quaternion.AngleAxis(medio, Vector3.up) * forward) * radio);
     }
