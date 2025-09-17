@@ -1,22 +1,22 @@
 ﻿using UnityEngine;
 
-/// <summary>
+
 /// Controla y arma la FSM del enemigo.
-/// </summary>
+
 [RequireComponent(typeof(EnemigoModel))]
 public class EnemigoController : MonoBehaviour
 {
     [Header("Parámetros de comportamiento")]
-    [SerializeField] private int iteracionesParaIdle = 5;
-    [SerializeField] private float tiempoIdle = 2f;
+    [SerializeField] private int iteracionesParaIdle = 5;   // cuántas veces patrulla antes de quedarse quieto en idle
+    [SerializeField] private float tiempoIdle = 2f;         // cuánto tiempo dura el idle
 
     [Header("Debug (solo lectura)")]
-    [SerializeField] private string estadoActual = "Desconocido";
+    [SerializeField] private string estadoActual = "Desconocido"; // solo para ver en el inspector qué estado tiene ahora
 
-    private FSMEnemigo<EnemyStates> fsm;
-    private EnemigoModel modelo;
+    private FSMEnemigo<EnemyStates> fsm;   // la máquina de estados
+    private EnemigoModel modelo;           // el modelo del enemigo, con todos los datos
 
-    // Estados
+    // Estados que vamos a usar
     private PatrullaEnemigoState estadoPatrulla;
     private HuirEnemigoState estadoHuir;
     private IdleEnemigoState estadoIdle;
@@ -24,6 +24,7 @@ public class EnemigoController : MonoBehaviour
 
     private void Awake()
     {
+        // agarramos el componente del modelo, si no está explota con error
         modelo = GetComponent<EnemigoModel>();
         if (modelo == null)
         {
@@ -32,19 +33,22 @@ public class EnemigoController : MonoBehaviour
             return;
         }
 
+        // creamos la FSM
         fsm = new FSMEnemigo<EnemyStates>();
 
+        // instanciamos cada estado con sus parámetros
         estadoPatrulla = new PatrullaEnemigoState(modelo, iteracionesParaIdle);
         estadoHuir = new HuirEnemigoState(modelo);
         estadoIdle = new IdleEnemigoState(modelo, tiempoIdle);
         estadoAttack = new AttackEnemigoState(modelo);
 
+        // le decimos a cada estado a qué fsm pertenece
         estadoPatrulla.SetFSM(fsm);
         estadoHuir.SetFSM(fsm);
         estadoIdle.SetFSM(fsm);
         estadoAttack.SetFSM(fsm);
 
-        // Transiciones
+        // definimos transiciones entre estados
         estadoPatrulla.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoPatrulla.AddTransition(EnemyStates.Idle, estadoIdle);
         estadoPatrulla.AddTransition(EnemyStates.Attack, estadoAttack);
@@ -54,20 +58,20 @@ public class EnemigoController : MonoBehaviour
         estadoIdle.AddTransition(EnemyStates.Attack, estadoAttack);
 
         estadoHuir.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
-        estadoHuir.AddTransition(EnemyStates.Attack, estadoAttack); // opcional: de huir a atacar
+        estadoHuir.AddTransition(EnemyStates.Attack, estadoAttack); // esto es opcional, de huir a atacar
 
         estadoAttack.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
         estadoAttack.AddTransition(EnemyStates.Huir, estadoHuir);
 
+        // arrancamos siempre en patrulla
         fsm.SetInitialState(estadoPatrulla);
         estadoActual = "Patrulla";
     }
 
     private void Update()
     {
+        // cada frame le pedimos a la fsm que ejecute el estado actual
         fsm.OnUpdate();
-        // si tu FSM expone nombre actual, podés actualizarlo acá
-       
+        
     }
 }
-

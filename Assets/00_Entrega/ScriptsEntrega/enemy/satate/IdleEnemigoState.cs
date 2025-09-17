@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Estado de idle: frenamos donde estamos pas un tiempo y volvemos a movermos
 public class IdleEnemigoState : EstadoEnemigo<EnemyStates>
 {
     private readonly EnemigoModel modelo;
@@ -14,14 +15,15 @@ public class IdleEnemigoState : EstadoEnemigo<EnemyStates>
 
     public override void Enter()
     {
-        temporizador = 0f;
-        modelo.MoverXZ(Vector3.zero, 0f); // detenerse
+        temporizador = 0f; // arrancamos a contar desde cero
+        modelo.MoverXZ(Vector3.zero, 0f); // se queda quieto
         if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Enter Idle");
     }
 
     public override void Execute()
     {
-        // Si detecta al jugador, random: par ? Huir, impar ? Attack
+        // si el sensor ve al jugador, tiramos un random y elegimos
+        // hacemos esto para decidir si vamos a atacar o vamos a huir
         if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
         {
             int tiro = Random.Range(0, 1000000);
@@ -32,9 +34,11 @@ public class IdleEnemigoState : EstadoEnemigo<EnemyStates>
             return;
         }
 
+        // si no hay jugador, sumamos tiempo
         temporizador += Time.deltaTime;
         if (temporizador >= tiempoIdle)
         {
+            // cuando se cumple el tiempo, vuelve a patrulla
             fsm.SetState(EnemyStates.Patrulla);
         }
     }

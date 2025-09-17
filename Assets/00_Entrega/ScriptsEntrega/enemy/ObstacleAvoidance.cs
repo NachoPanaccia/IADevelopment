@@ -4,16 +4,15 @@ using UnityEngine;
 public class ObstacleAvoidance : MonoBehaviour
 {
     [Header("Detección")]
-    [SerializeField] private float rangoPrediccionBase = 2f;   // metros de look-ahead mínimos
-    [SerializeField] private float factorRangoPorVelocidad = 0.15f; // metros extra por cada m/s
-    [SerializeField] private float radio = 0.6f;               // radio del SphereCast
-    [SerializeField] private LayerMask mascaraObstaculos = ~0; // por defecto: todo
+    [SerializeField] private float rangoPrediccionBase = 2f;   
+    [SerializeField] private float factorRangoPorVelocidad = 0.15f; 
+    [SerializeField] private float radio = 0.6f;               
+    [SerializeField] private LayerMask mascaraObstaculos = ~0; 
 
     [Header("Respuesta")]
-    [SerializeField] private float pesoEvitacion = 2.0f;       // cuán fuerte empuja al costado
-    [SerializeField] private float atenuarFrente = 0.5f;       // reduce empuje si la normal da muy “de frente”
-    [SerializeField] private bool forzarLateral = true;        // proyecta la normal al plano XZ y perpendicular a la marcha
-
+    [SerializeField] private float pesoEvitacion = 2.0f;       
+    [SerializeField] private float atenuarFrente = 0.5f;       
+    [SerializeField] private bool forzarLateral = true;        
     [Header("Depuración")]
     [SerializeField] private bool habilitarLogs = false;
     [SerializeField] private bool dibujarGizmos = true;
@@ -22,39 +21,39 @@ public class ObstacleAvoidance : MonoBehaviour
     private RaycastHit ultimoHit;
     private bool huboHit;
 
-    /// <summary>
-    /// Devuelve un vector de evitación (en XZ). Si no hay obstáculo, Vector3.zero.
-    /// Pasar acá la velocidad deseada (m/s * dirección).
-    /// </summary>
+    
+    /// Devuelve un vector de evitación (en xz). Si no hay obstáculo, Vector3.zero.
+    
+    
     public Vector3 Evitar(Vector3 velocidadDeseada)
     {
         ultimaVelocidad = velocidadDeseada;
         huboHit = false;
 
-        // Si no nos estamos moviendo, no hay nada que evitar.
+        // Si no nos movemos no evitamos nada
         if (velocidadDeseada.sqrMagnitude < 0.0001f)
             return Vector3.zero;
 
-        // Dirección y distancia de look-ahead.
+        // Dirección y distancia 
         Vector3 dir = velocidadDeseada.normalized;
         float lookAhead = rangoPrediccionBase + factorRangoPorVelocidad * velocidadDeseada.magnitude;
 
-        // SphereCast al frente
+        
         if (Physics.SphereCast(transform.position, radio, dir, out RaycastHit hit, lookAhead, mascaraObstaculos, QueryTriggerInteraction.Ignore))
         {
             huboHit = true;
             ultimoHit = hit;
 
-            // Normal del obstáculo (aplanada a XZ)
+            // Normal del obstáculo 
             Vector3 normal = hit.normal;
             normal.y = 0f;
             if (normal.sqrMagnitude < 0.0001f)
                 normal = (transform.position - hit.point).normalized; // fallback
 
-            // Opcional: “forzar” una componente lateral pura si la normal apunta demasiado hacia atrás o adelante
+            
             if (forzarLateral)
             {
-                // Eje lateral respecto a la marcha (perpendicular en el plano XZ)
+                
                 Vector3 lateral = Vector3.Cross(Vector3.up, dir).normalized;
                 // Elegimos el lado que más se aleja del obstáculo
                 float lado = Mathf.Sign(Vector3.Dot(lateral, normal));
@@ -62,7 +61,7 @@ public class ObstacleAvoidance : MonoBehaviour
             }
             else
             {
-                // Si la normal es muy frontal, la atenuamos para no frenar en seco.
+                
                 float frontal = Mathf.Abs(Vector3.Dot(normal, dir));
                 normal *= Mathf.Lerp(1f, atenuarFrente, frontal);
             }
@@ -84,7 +83,7 @@ public class ObstacleAvoidance : MonoBehaviour
     {
         if (!dibujarGizmos) return;
 
-        // Dibujar look-ahead con datos actuales
+        // Dibujar 
         Vector3 dir = (ultimaVelocidad.sqrMagnitude > 0.0001f) ? ultimaVelocidad.normalized : transform.forward;
         float lookAhead = rangoPrediccionBase + factorRangoPorVelocidad * ultimaVelocidad.magnitude;
 

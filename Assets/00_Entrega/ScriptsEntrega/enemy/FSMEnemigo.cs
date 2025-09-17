@@ -5,7 +5,7 @@ public class FSMEnemigo<T>
 {
     private IEstadoEnemigo<T> estadoActual;
 
-    // Debug opcional
+   
     public string EstadoActualNombre => estadoActual != null ? estadoActual.GetType().Name : "NULL";
 
     public void SetInitialState(IEstadoEnemigo<T> inicial)
@@ -17,7 +17,7 @@ public class FSMEnemigo<T>
 
     public void OnUpdate()
     {
-        // ✅ Evita NullReference si aún no hay estado inicial
+        
         if (estadoActual == null) return;
         estadoActual.Execute();
     }
