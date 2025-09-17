@@ -56,6 +56,7 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
             if (modelo.tiempoEsperaRestante <= 0f)
             {
                 contadorIteraciones++;         // contamos  para decidir ir a Idle
+                Debug.Log($"[Enemigo][Patrulla] Llegó al punto {modelo.indicePunto} → avanzando al siguiente");
                 AvanzarIndice();               // pasamos al próximo punto o rebotamos
                 modelo.tiempoEsperaRestante = modelo.TiempoEsperaEnPunto; // hacemos una mini espera
             }

@@ -5246,7 +5246,7 @@ GameObject:
   - component: {fileID: 2686568163433478072}
   - component: {fileID: 8806427233441000052}
   m_Layer: 0
-  m_Name: enemy
+  m_Name: enemy 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5262,7 +5262,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9875044, z: -0, w: 0.15759133}
   m_LocalPosition: {x: 2.15, y: 0, z: -7.97}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.76108, y: 0.75974, z: 0.54689}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1039090644690885852}
@@ -5310,13 +5310,13 @@ MonoBehaviour:
   ultimaPosicionVista: {x: 0, y: 0, z: 0}
   tiempoDesdeUltimaVista: 0
   objetivo: {fileID: 0}
-  distanciaVision: 11.8
-  anguloVision: 90
-  alturaOjos: 1.6
+  distanciaVision: 22.9
+  anguloVision: 50
+  alturaOjos: 1.25
   mascaraObstaculos:
     serializedVersion: 2
     m_Bits: 8
-  tiempoMemoriaVision: 2
+  tiempoMemoriaVision: 3
   intervaloChequeo: 0.1
   habilitarLogs: 1
   dibujarGizmos: 1
@@ -5365,8 +5365,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6768f83f2d9228c45be00d7882bfffe3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  velocidadPatrulla: 3.5
-  velocidadHuida: 6
+  velocidadPatrulla: 5
+  velocidadHuida: 3
   velocidadGiro: 10
   distanciaLlegada: 0.5
   puntosPatrulla:
@@ -5378,7 +5378,7 @@ MonoBehaviour:
   tiempoEsperaEnPunto: 0.25
   sensor: {fileID: 7594028429279794593}
   tiempoHuidaExtra: 1.25
-  velocidadAtaque: 7
+  velocidadAtaque: 3
   habilitarLogs: 1
 --- !u!114 &2686568163433478072
 MonoBehaviour:
@@ -5407,13 +5407,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08728ba1bae81bd4ca374b9e02131133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rangoPrediccionBase: 3.65
-  factorRangoPorVelocidad: 1.9
-  radio: 1.95
+  rangoPrediccionBase: 3
+  factorRangoPorVelocidad: 0.15
+  radio: 1.5
   mascaraObstaculos:
     serializedVersion: 2
     m_Bits: 8
-  pesoEvitacion: 4
+  pesoEvitacion: 3
   atenuarFrente: 0.5
   forzarLateral: 1
   habilitarLogs: 1
