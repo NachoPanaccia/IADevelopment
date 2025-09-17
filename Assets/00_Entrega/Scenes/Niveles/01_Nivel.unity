@@ -281,7 +281,7 @@ MonoBehaviour:
   collisionRadius: 0.2
   collisionMask:
     serializedVersion: 2
-    m_Bits: 255
+    m_Bits: 223
   invertX: 0
   invertY: 0
 --- !u!1 &121980223

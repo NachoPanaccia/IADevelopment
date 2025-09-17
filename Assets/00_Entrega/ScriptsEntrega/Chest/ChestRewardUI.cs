@@ -17,6 +17,11 @@ public class ChestRewardUI : MonoBehaviour
     [SerializeField] private string levelSceneName = "01_Nivel";
     [SerializeField] private string menuSceneName = "Menu Principal";
 
+    [Header("Cursor")]
+    [SerializeField] bool manageCursor = true; // dejar en true
+    CursorLockMode _prevLock;
+    bool _prevVisible;
+
     float _prevTimeScale = 1f;
     bool _shown = false;
 
@@ -72,8 +77,17 @@ public class ChestRewardUI : MonoBehaviour
     void Show()
     {
         _shown = true;
+
+        if (manageCursor)
+        {
+            _prevLock = Cursor.lockState;
+            _prevVisible = Cursor.visible;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         _prevTimeScale = Time.timeScale;
-        Time.timeScale = 0f;        // congelar el juego
+        Time.timeScale = 0f;
         SetVisible(true);
         Debug.Log("[ChestRewardUI] Juego pausado por recompensa.");
     }
@@ -95,14 +109,23 @@ public class ChestRewardUI : MonoBehaviour
     // ========= Botones =========
     void OnReplay()
     {
-        Time.timeScale = 1f; // restaurar antes de cargar
+        RestoreCursor();
+        Time.timeScale = 1f;
         SceneManager.LoadScene(levelSceneName);
     }
 
     void OnMenu()
     {
-        Time.timeScale = 1f; // restaurar antes de cargar
+        RestoreCursor();
+        Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
+    }
+
+    void RestoreCursor()
+    {
+        if (!manageCursor) return;
+        Cursor.lockState = _prevLock;
+        Cursor.visible = _prevVisible;
     }
 
     // ========= Colores por rareza =========

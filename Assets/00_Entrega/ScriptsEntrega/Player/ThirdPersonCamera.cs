@@ -27,7 +27,7 @@ public class ThirdPersonCamera : MonoBehaviour
     [SerializeField] bool invertX = false; // gira a la inversa en horizontal
     [SerializeField] bool invertY = false;
 
-    private bool lockCursor = true;
+    [SerializeField] private bool lockCursor = true;
 
     // estado interno
     float _yaw;
