@@ -25,11 +25,8 @@ public class PlayerController : MonoBehaviour
     {
         if (!view) view = GetComponentInChildren<PlayerView>();
 
-        moveStrategy = new SimpleTransformMove(
-            bodyTransform: transform,
-            model: model,
-            visualRoot: view ? view.ModelRoot : null
-        );
+        var rb = GetComponent<Rigidbody>();
+        moveStrategy = new RigidbodyMove(rb, model, view ? view.ModelRoot : null);
 
         fsm = new FSM();
         idleState = new IdleState(this, fsm, model, view);
