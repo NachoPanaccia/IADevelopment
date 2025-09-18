@@ -1,5 +1,3 @@
-using NUnit.Framework.Interfaces;
-using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -31,9 +29,9 @@ public class PlayerController : MonoBehaviour
         fsm = new FSM();
         idleState = new IdleState(this, fsm, model, view);
         walkState = new WalkState(this, fsm, model, view);
-        runState = new RunState(this, fsm, model, view);        // nuevo
-        runToStopState = new RunToStopState(this, fsm, model, view);  // nuevo
-        punchState = new PunchState(this, fsm, model, view);      // nuevo
+        runState = new RunState(this, fsm, model, view);
+        runToStopState = new RunToStopState(this, fsm, model, view);
+        punchState = new PunchState(this, fsm, model, view);
     }
 
     private void Start()

@@ -7920,12 +7920,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   view: {fileID: 1686781125}
   model:
-    walkSpeed: 5
-    runSpeed: 10
-    rotationLerp: 15
+    walkSpeed: 8
+    runSpeed: 14
+    rotationLerp: 13
     speedFactor: 0
-    accel: 4
-    decel: 6
+    accel: 6
+    decel: 8
 --- !u!114 &998941413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7938,7 +7938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9182df96c90eb7f44a78a02164e07ec3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactRadius: 2
+  interactRadius: 6
   layerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -17403,7 +17403,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4134159160519686707, guid: f7b32c0eea1d1c840908227ad4f2dd95, type: 3}
       propertyPath: worldOffset.y
-      value: 2.5
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
