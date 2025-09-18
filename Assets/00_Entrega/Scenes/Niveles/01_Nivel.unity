@@ -788,17 +788,14 @@ MonoBehaviour:
   distance: 11
   minDistance: 7
   maxDistance: 13
-  mouseSensitivity: 120
+  mouseSensitivity: 100
   pitchMin: -20
-  pitchMax: 120
-  followLerp: 12
+  pitchMax: 150
+  followLerp: 20
   collisionRadius: 0.2
   collisionMask:
     serializedVersion: 2
-    m_Bits: 223
-  invertX: 0
-  invertY: 0
-  lockCursor: 0
+    m_Bits: 768
 --- !u!1001 &101736674
 PrefabInstance:
   m_ObjectHideFlags: 0
