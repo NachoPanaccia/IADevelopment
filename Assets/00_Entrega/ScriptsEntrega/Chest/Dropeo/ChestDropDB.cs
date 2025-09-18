@@ -1,9 +1,7 @@
-using UnityEngine;
 using static ChestPressedLogic;
 
 public static class ChestDropDB
 {
-    // Definición de ítem en código (no serializa, no se ve en el Inspector)
     public sealed class DropDef
     {
         public readonly string name;
@@ -15,7 +13,7 @@ public static class ChestDropDB
             this.rarity = rarity;
         }
     }
-    
+
     public static readonly DropDef[] All = new DropDef[]
     {
         new DropDef("Espada del Alba", Rarity.Normal),
@@ -121,6 +119,5 @@ public static class ChestDropDB
         new DropDef("Báculo de Aurion, Rompelímites", Rarity.Legendaria),
         new DropDef("Escudo del Último Rey", Rarity.Legendaria),
         new DropDef("Orbe del Sol Ígneo", Rarity.Legendaria),
-
     };
 }

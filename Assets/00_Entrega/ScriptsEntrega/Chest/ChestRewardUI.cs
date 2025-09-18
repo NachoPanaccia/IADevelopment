@@ -2,14 +2,13 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using static ChestPressedLogic;
 
 public class ChestRewardUI : MonoBehaviour
 {
     [Header("Referencias UI (en el PANEL)")]
-    [SerializeField] private CanvasGroup group;        // CanvasGroup en el PANEL
-    [SerializeField] private TMP_Text titleText;       // "¡Felicidades!"
-    [SerializeField] private TMP_Text bodyText;        // "Has obtenido: <nombre>"
+    [SerializeField] private CanvasGroup group;
+    [SerializeField] private TMP_Text titleText;
+    [SerializeField] private TMP_Text bodyText;
     [SerializeField] private Button replayButton;
     [SerializeField] private Button menuButton;
 
@@ -18,20 +17,17 @@ public class ChestRewardUI : MonoBehaviour
     [SerializeField] private string menuSceneName = "Menu Principal";
 
     [Header("Cursor")]
-    [SerializeField] bool manageCursor = true; // dejar en true
+    [SerializeField] private bool manageCursor = true;
+
     CursorLockMode _prevLock;
     bool _prevVisible;
-
     float _prevTimeScale = 1f;
-    bool _shown = false;
+    bool _shown;
 
     void Awake()
     {
-        // Auto-get del CanvasGroup en el panel si no está asignado
         if (!group) group = GetComponent<CanvasGroup>();
-
-        // Panel oculto desde el inicio (sin desactivar el GameObject)
-        SetVisible(false, immediate: true);
+        SetVisible(false, true);
 
         if (replayButton) replayButton.onClick.AddListener(OnReplay);
         if (menuButton) menuButton.onClick.AddListener(OnMenu);
@@ -47,18 +43,17 @@ public class ChestRewardUI : MonoBehaviour
         ChestPressedLogic.OnRewardRolled -= OnRewardRolled;
     }
 
-    // ========= Llamado cuando un cofre entrega recompensa =========
-    void OnRewardRolled(ChestDropDB.DropDef item, Rarity rarity)
+    void OnRewardRolled(ChestDropDB.DropDef item, ChestPressedLogic.Rarity rarity)
     {
-        if (_shown) return; // mostramos solo la primera recompensa
+        if (_shown) return;
 
-        if (rarity == Rarity.Nada)
+        if (rarity == ChestPressedLogic.Rarity.Nada)
         {
             if (titleText) titleText.text = "¡HAZ ENCONTRADO EL COFRE! pero...";
             if (bodyText)
             {
                 bodyText.text = "Lamentablemente estaba vacío, ¡mala suerte!";
-                bodyText.color = new Color(0.8f, 0.8f, 0.8f); // gris suave
+                bodyText.color = new Color(0.8f, 0.8f, 0.8f);
             }
         }
         else
@@ -89,14 +84,12 @@ public class ChestRewardUI : MonoBehaviour
         _prevTimeScale = Time.timeScale;
         Time.timeScale = 0f;
         SetVisible(true);
-        Debug.Log("[ChestRewardUI] Juego pausado por recompensa.");
     }
 
     void SetVisible(bool visible, bool immediate = false)
     {
         if (!group)
         {
-            // fallback si no hay CanvasGroup: activar/desactivar objeto
             gameObject.SetActive(visible);
             return;
         }
@@ -106,7 +99,6 @@ public class ChestRewardUI : MonoBehaviour
         group.alpha = visible ? 1f : 0f;
     }
 
-    // ========= Botones =========
     void OnReplay()
     {
         RestoreCursor();
@@ -128,15 +120,14 @@ public class ChestRewardUI : MonoBehaviour
         Cursor.visible = _prevVisible;
     }
 
-    // ========= Colores por rareza =========
-    Color GetColorFor(Rarity r)
+    Color GetColorFor(ChestPressedLogic.Rarity r)
     {
         switch (r)
         {
-            case Rarity.Normal: return Color.white;
-            case Rarity.Rara: return Hex("#32CD32"); // Verde Lima
-            case Rarity.Epica: return Hex("#A020F0"); // Púrpura
-            case Rarity.Legendaria: return Hex("#FFD700"); // Dorado brillante
+            case ChestPressedLogic.Rarity.Normal: return Color.white;
+            case ChestPressedLogic.Rarity.Rara: return Hex("#32CD32");
+            case ChestPressedLogic.Rarity.Epica: return Hex("#A020F0");
+            case ChestPressedLogic.Rarity.Legendaria: return Hex("#FFD700");
             default: return new Color(0.8f, 0.8f, 0.8f);
         }
     }

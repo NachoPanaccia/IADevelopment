@@ -20,7 +20,6 @@ public class DefeatScreenUI : MonoBehaviour
 
     void Awake()
     {
-        // Asegura juego reanudado y cursor visible
         Time.timeScale = 1f;
         if (manageCursor)
         {
@@ -30,7 +29,6 @@ public class DefeatScreenUI : MonoBehaviour
             Cursor.visible = true;
         }
 
-        // Hooks opcionales
         if (retryButton) retryButton.onClick.AddListener(OnRetry);
         if (menuButton) menuButton.onClick.AddListener(OnMainMenu);
     }
@@ -54,12 +52,5 @@ public class DefeatScreenUI : MonoBehaviour
         }
         Time.timeScale = 1f;
         SceneManager.LoadScene(scene);
-    }
-
-    // Atajos de teclado (Enter = reintentar, Esc = menú)
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Return)) OnRetry();
-        if (Input.GetKeyDown(KeyCode.Escape)) OnMainMenu();
     }
 }

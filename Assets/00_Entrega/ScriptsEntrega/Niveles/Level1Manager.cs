@@ -25,17 +25,15 @@ public class Level1Manager : MonoBehaviour
     [SerializeField] string menuSceneName = "Menu Principal";
 
     float _timeLeft;
-    int _chestsOpened = 0;
-    bool _isGameOver = false;
-
-    bool _introActive = false;
-    bool _pauseActive = false;
+    int _chestsOpened;
+    bool _isGameOver;
+    bool _introActive;
+    bool _pauseActive;
 
     void Awake()
     {
         _timeLeft = levelTimeSeconds;
         if (!playerHealth) playerHealth = Object.FindFirstObjectByType<PlayerHealth>();
-
         SetGroupVisible(introPanel, false, true);
         SetGroupVisible(pausePanel, false, true);
     }
@@ -44,7 +42,6 @@ public class Level1Manager : MonoBehaviour
     {
         ChestController.OnAnyChestOpened += OnChestOpened;
         if (playerHealth) playerHealth.OnDied += OnPlayerDied;
-
         StartCoroutine(IntroRoutine());
     }
 
@@ -73,12 +70,7 @@ public class Level1Manager : MonoBehaviour
             if (_chestsOpened <= 0)
             {
                 _isGameOver = true;
-                Debug.Log("Perdiste");
                 GoToMenu();
-            }
-            else
-            {
-                Debug.Log("Ganaste");
             }
         }
 
@@ -88,7 +80,7 @@ public class Level1Manager : MonoBehaviour
     void GoToMenu()
     {
         Time.timeScale = 1f;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(menuSceneName);
+        SceneManager.LoadScene(menuSceneName);
     }
 
     System.Collections.IEnumerator IntroRoutine()
@@ -125,10 +117,9 @@ public class Level1Manager : MonoBehaviour
         Time.timeScale = 1f;
     }
 
-    // Botón del menú de pausa: volver al menú principal
     public void ExitGame()
     {
-        Time.timeScale = 1f; // aseguramos reanudar antes de cambiar de escena
+        Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
     }
 
@@ -136,15 +127,12 @@ public class Level1Manager : MonoBehaviour
     {
         if (_isGameOver) return;
         _chestsOpened++;
-        if (_timeLeft > 0f && _chestsOpened == 1)
-            Debug.Log("Ganaste");
     }
 
     void OnPlayerDied()
     {
         if (_isGameOver) return;
         _isGameOver = true;
-        Debug.Log("Perdiste");
     }
 
     static void SetGroupVisible(CanvasGroup g, bool visible, bool immediate = false)

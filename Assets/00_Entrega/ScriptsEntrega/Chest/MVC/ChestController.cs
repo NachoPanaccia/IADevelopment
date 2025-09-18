@@ -12,8 +12,8 @@ public class ChestController : MonoBehaviour, IInteractable
     [SerializeField] private ChestPromptView promptView;
 
     [Header("Estado")]
-    [SerializeField] private bool opened = false;  // ya quedó en Chest_Press
-    bool opening = false;                          // anim de apertura en curso
+    [SerializeField] private bool opened;
+    bool opening;
 
     public Vector3 Position => transform.position;
 
@@ -29,8 +29,16 @@ public class ChestController : MonoBehaviour, IInteractable
         if (!view) view = GetComponent<ChestView>();
         if (!promptView) promptView = GetComponentInChildren<ChestPromptView>();
 
-        if (!opened) { view.PlayIdle(); promptView?.SetPromptVisible(false); }
-        else { view.PlayPress(); promptView?.SetPromptVisible(false); }
+        if (!opened)
+        {
+            view.PlayIdle();
+            promptView?.SetPromptVisible(false);
+        }
+        else
+        {
+            view.PlayPress();
+            promptView?.SetPromptVisible(false);
+        }
     }
 
     public bool CanInteract(Transform interactor) => !opened && !opening;
@@ -52,11 +60,10 @@ public class ChestController : MonoBehaviour, IInteractable
         view.PlayPress();
         opened = true;
         opening = false;
-        
+
         promptView?.SetPromptVisible(false);
 
         if (pressedLogic) pressedLogic.OnChestPressed();
-
         OnAnyChestOpened?.Invoke(this);
     }
 }

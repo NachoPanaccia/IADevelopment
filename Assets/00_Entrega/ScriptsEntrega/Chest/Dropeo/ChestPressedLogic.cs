@@ -5,7 +5,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class ChestPressedLogic : MonoBehaviour
 {
-    public static event System.Action<ChestDropDB.DropDef, Rarity> OnRewardRolled;
+    public static event Action<ChestDropDB.DropDef, Rarity> OnRewardRolled;
 
     public enum Rarity { Nada = 0, Normal = 1, Rara = 2, Epica = 3, Legendaria = 4 }
 
@@ -18,7 +18,7 @@ public sealed class ChestPressedLogic : MonoBehaviour
 
     [Header("Pesos por rareza (ruleta)")]
     [SerializeField]
-    private RarityWeight[] rarityWeights = new RarityWeight[]
+    private RarityWeight[] rarityWeights =
     {
         new RarityWeight{ rarity = Rarity.Nada,       weight = 50f },
         new RarityWeight{ rarity = Rarity.Normal,     weight = 35f },
@@ -27,38 +27,30 @@ public sealed class ChestPressedLogic : MonoBehaviour
         new RarityWeight{ rarity = Rarity.Legendaria, weight = 1f  },
     };
 
-    // cache para acceso rápido por rareza
-    private readonly Dictionary<Rarity, List<ChestDropDB.DropDef>> _byRarity = new();
+    readonly Dictionary<Rarity, List<ChestDropDB.DropDef>> _byRarity = new();
 
-    void Awake()
-    {
-        BuildIndex(); // indexa el catálogo definido en código
-    }
+    void Awake() => BuildIndex();
 
     public void OnChestPressed()
     {
         var chosenRarity = RollRarity();
         if (chosenRarity == Rarity.Nada)
         {
-            Debug.Log("[Chest] No cayó nada (Rareza: Nada).");
             OnRewardRolled?.Invoke(null, Rarity.Nada);
             return;
         }
 
-        var item = PickFromRarity(chosenRarity); // <- esta es la firma correcta
+        var item = PickFromRarity(chosenRarity);
         if (item == null)
         {
-            Debug.LogWarning($"[Chest] Rareza {chosenRarity} seleccionada, pero no hay ítems de esa rareza.");
             OnRewardRolled?.Invoke(null, Rarity.Nada);
             return;
         }
 
-        Debug.Log($"[Chest] Premio: {item.name}  (Rareza: {chosenRarity})");
         OnRewardRolled?.Invoke(item, chosenRarity);
     }
 
-    // ---------- núcleo ruleta por rareza ----------
-    private Rarity RollRarity()
+    Rarity RollRarity()
     {
         float total = 0f;
         for (int i = 0; i < rarityWeights.Length; i++)
@@ -76,7 +68,6 @@ public sealed class ChestPressedLogic : MonoBehaviour
             if (r < w.weight) return w.rarity;
             r -= w.weight;
         }
-        // fallback defensivo
         for (int i = rarityWeights.Length - 1; i >= 0; --i)
         {
             var w = rarityWeights[i];
@@ -85,7 +76,7 @@ public sealed class ChestPressedLogic : MonoBehaviour
         return Rarity.Nada;
     }
 
-    private ChestDropDB.DropDef PickFromRarity(Rarity rarity)
+    ChestDropDB.DropDef PickFromRarity(Rarity rarity)
     {
         if (!_byRarity.TryGetValue(rarity, out var list) || list == null || list.Count == 0)
             return null;
@@ -94,10 +85,10 @@ public sealed class ChestPressedLogic : MonoBehaviour
         return list[idx];
     }
 
-    private void BuildIndex()
+    void BuildIndex()
     {
         _byRarity.Clear();
-        foreach (var def in ChestDropDB.All) // catálogo definido en código (no serializado)
+        foreach (var def in ChestDropDB.All)
         {
             if (def == null) continue;
             if (!_byRarity.TryGetValue(def.rarity, out var list))
