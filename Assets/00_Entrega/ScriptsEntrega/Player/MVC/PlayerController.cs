@@ -8,18 +8,16 @@ public class PlayerController : MonoBehaviour
     [Header("Modelo (datos)")]
     public PlayerModel model = new PlayerModel();
 
-    // Estrategia de movimiento (se puede reemplazar por CharacterController, Rigidbody, etc.)
-    private IMove moveStrategy;
+    IMove moveStrategy;
 
-    // FSM + estados
-    private FSM fsm;
-    private IdleState idleState;
-    private WalkState walkState;
-    private RunState runState;
-    private RunToStopState runToStopState;
-    private PunchState punchState;
+    FSM fsm;
+    IdleState idleState;
+    WalkState walkState;
+    RunState runState;
+    RunToStopState runToStopState;
+    PunchState punchState;
 
-    private void Awake()
+    void Awake()
     {
         if (!view) view = GetComponentInChildren<PlayerView>();
 
@@ -34,25 +32,22 @@ public class PlayerController : MonoBehaviour
         punchState = new PunchState(this, fsm, model, view);
     }
 
-    private void Start()
+    void Start()
     {
         fsm.Initialize(idleState);
     }
 
-    private void Update()
+    void Update()
     {
         fsm.CurrentState.HandleInput();
         fsm.CurrentState.LogicUpdate();
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
         fsm.CurrentState.PhysicsUpdate();
     }
 
-    // ======= Helpers que usan los estados =======
-
-    // Lee WASD/Arrows con Input clásico
     public Vector3 ReadMovementInput()
     {
         float h = Input.GetAxisRaw("Horizontal");
@@ -60,7 +55,6 @@ public class PlayerController : MonoBehaviour
         return new Vector3(h, 0f, v).normalized;
     }
 
-    // Convierte el input a espacio de cámara (WASD relativo a cámara)
     public Vector3 ToCameraSpace(Vector3 inputDir)
     {
         if (inputDir.sqrMagnitude < 0.0001f) return Vector3.zero;
@@ -74,17 +68,16 @@ public class PlayerController : MonoBehaviour
         return (camFwd * inputDir.z + camRight * inputDir.x).normalized;
     }
 
-    public void Move(Vector3 worldDir)  // compat: usa velocidad de caminar por defecto
+    public void Move(Vector3 worldDir)
     {
         moveStrategy.Move(worldDir, model.GetSpeed(false));
     }
 
-    public void Move(Vector3 worldDir, float speed) // para estados que quieran fijar velocidad
+    public void Move(Vector3 worldDir, float speed)
     {
         moveStrategy.Move(worldDir, speed);
     }
 
-    // Accesos que usan los estados para cambiar
     public IdleState Idle => idleState;
     public WalkState Walk => walkState;
     public RunState Run => runState;

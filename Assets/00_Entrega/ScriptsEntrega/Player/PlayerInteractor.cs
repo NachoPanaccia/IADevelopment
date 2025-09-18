@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEngine;
 
 public class PlayerInteractor : MonoBehaviour
@@ -14,7 +13,6 @@ public class PlayerInteractor : MonoBehaviour
     void Update()
     {
         UpdateFocus();
-
         if (Input.GetKeyDown(KeyCode.E) && _current != null) _current.Interact(transform);
     }
 
@@ -37,18 +35,16 @@ public class PlayerInteractor : MonoBehaviour
             {
                 bestSqr = sqr;
                 closest = interactable;
-                closestPrompt = h.GetComponentInParent<IShowPrompt>(); // puede ser ChestPromptView
+                closestPrompt = h.GetComponentInParent<IShowPrompt>();
             }
         }
 
-        // si cambia el foco, apagamos el anterior
         if (!ReferenceEquals(_currentPrompt, closestPrompt))
             _currentPrompt?.SetPromptVisible(false);
 
         _current = closest;
         _currentPrompt = closestPrompt;
 
-        // mostramos sólo si hay algo en foco y se puede interactuar
         if (_current != null) _currentPrompt?.SetPromptVisible(true);
         else _currentPrompt?.SetPromptVisible(false);
     }

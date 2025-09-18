@@ -20,7 +20,10 @@ public class IdleState : State
     public override void LogicUpdate()
     {
         if (Input.GetMouseButtonDown(0))
-        { fsm.ChangeState(player.Punch); return; }
+        {
+            fsm.ChangeState(player.Punch);
+            return;
+        }
 
         bool moving = model.InputVector.sqrMagnitude > 0.01f;
         if (moving)
