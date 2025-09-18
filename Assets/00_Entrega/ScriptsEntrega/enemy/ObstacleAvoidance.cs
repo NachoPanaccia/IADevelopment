@@ -70,8 +70,7 @@ public class ObstacleAvoidance : MonoBehaviour
             Vector3 evitacion = normal * pesoEvitacion;
             evitacion.y = 0f;
 
-            if (habilitarLogs)
-                Debug.Log($"[ObstacleAvoidance] Esquivando '{hit.collider.name}' a {hit.distance:0.00}m. Normal={hit.normal}, Evitacion={evitacion}");
+           
 
             return evitacion;
         }

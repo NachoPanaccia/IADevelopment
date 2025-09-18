@@ -5262,7 +5262,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9875044, z: -0, w: 0.15759133}
   m_LocalPosition: {x: 2.15, y: 0, z: -7.97}
-  m_LocalScale: {x: 0.76108, y: 0.75974, z: 0.54689}
+  m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1039090644690885852}
@@ -5312,7 +5312,7 @@ MonoBehaviour:
   objetivo: {fileID: 0}
   distanciaVision: 22.9
   anguloVision: 50
-  alturaOjos: 1.25
+  alturaOjos: 1.42
   mascaraObstaculos:
     serializedVersion: 2
     m_Bits: 8

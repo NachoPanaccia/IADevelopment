@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 /// Estado de ataque: el enemigo persigue al jugador
@@ -65,11 +66,7 @@ public class AttackEnemigoState : EstadoEnemigo<EnemyStates>
         {
             if (modelo.HabilitarLogs) Debug.Log("[Enemigo] Atacó al jugador. GAME OVER.");
 
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+            SceneManager.LoadScene("Pantalla_Derrota");
         }
     }
 
