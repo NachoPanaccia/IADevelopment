@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿// andaba muy bien con el system pero al cambiar al tree no le gusto nada al random, nota para el futuro si algo no le gusta ageregar system.
+using UnityEngine;
 
 
 ///  Estado de patrulla: viaja entre puntos, si llega al final vamos lo hacemos al revez 
@@ -9,6 +10,8 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
     private readonly EnemigoModel modelo;
     private readonly int iteracionesParaIdle;
     private int contadorIteraciones;
+
+
 
     public PatrullaEnemigoState(EnemigoModel modelo, int iteracionesParaIdle = 5)
     {
@@ -29,16 +32,40 @@ public class PatrullaEnemigoState : EstadoEnemigo<EnemyStates>
 
     public override void Execute()
     {
-        // si ve al jugador, decide en el acto
-        // hacemos esto para decidir si vamos a atacar o vamos a huir
+        //si ve al jugador, decide en el acto
+        //hacemos esto para decidir si vamos a atacar o vamos a huir
+
+        //if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
+        //{
+        //    int tiro = Random.Range(0, 1000000);
+        //    bool esPar = (tiro % 2) == 0;
+        //    Debug.Log($"[Enemigo][Patrulla] Detectó jugador. Random={tiro} → {(esPar ? "Huir" : "Attack")}");
+
+        //    fsm.SetState(esPar ? EnemyStates.Huir : EnemyStates.Attack);
+        //    return;
+        //}
+
+
         if (modelo.Sensor != null && modelo.Sensor.ObjetivoVisible)
         {
-            int tiro = Random.Range(0, 1000000);
-            bool esPar = (tiro % 2) == 0;
-            if (modelo.HabilitarLogs) Debug.Log($"[Enemigo][Patrulla] Detectó jugador. Random={tiro} → {(esPar ? "Huir" : "Attack")}");
+            int tiro = Random.Range(1, 4);
+            if (tiro == 3)
+            {
+                fsm.SetState(EnemyStates.Huir);
+               Debug.Log("huir");
+            }
+            if (tiro == 2)
+            {
+               fsm.SetState(EnemyStates.Attack);
+                 Debug.Log("Atacar");
+            }
+            if (tiro == 1)
+            {
+                fsm.SetState(EnemyStates.Miedo);
+                Debug.Log("Freze");
 
-            fsm.SetState(esPar ? EnemyStates.Huir : EnemyStates.Attack);
-            return;
+            }
+
         }
 
         // si no hay púntos de patrulla no hacemos nada

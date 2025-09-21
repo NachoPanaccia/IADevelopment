@@ -3,5 +3,6 @@ public enum EnemyStates
     Patrulla,
     Huir,
     Idle,
-    Attack
+    Attack,
+    Miedo
 }
