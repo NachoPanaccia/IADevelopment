@@ -50,14 +50,14 @@ public class EnemigoModel : MonoBehaviour
     {
        
         rb = GetComponent<Rigidbody>();
-        // si no asignaste sensor en inspector lo busca en el mismo objeto
+        // si no asigne sensor en inspector lo busca en el mismo objeto
         if (sensor == null) sensor = GetComponent<DeteccionLineaDeVista>();
         // avisa si no le pasaste puntos de patrulla
         if (puntosPatrulla == null || puntosPatrulla.Length == 0)
             Debug.LogWarning("[EnemigoModel] No hay puntos de patrulla asignados.");
     }
 
-    // movimiento en xz con física, mantiene la velocidad y del rigidbody lo usamos en estados despues
+    // movimiento en xz con física mantiene la velocidad y del rigidbody lo usamos en estados despues
     public void MoverXZ(Vector3 direccionXZ, float velocidad)
     {
         direccionXZ.y = 0f;
@@ -80,7 +80,7 @@ public class EnemigoModel : MonoBehaviour
     {
         var avoider = GetComponent<ObstacleAvoidance>();
         if (avoider != null)
-            return avoider.Evitar(velocidadDeseada); // lo usabamos cuando no lo teniamos queda por las dudas
-        return Vector3.zero;
+            return avoider.Evitar(velocidadDeseada); 
+        return Vector3.zero;// lo usabamos cuando no lo teniamos queda por las dudas
     }
 }

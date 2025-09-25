@@ -7,7 +7,7 @@ public class EnemigoController : MonoBehaviour
     [Header("Parámetros de comportamiento")]
     [SerializeField] private int iteracionesParaIdle = 5;   // cuántas veces patrulla antes de quedarse quieto en idle
     [SerializeField] private float tiempoIdle = 2f;         // cuánto dura el idle
-    [SerializeField] private float duracionMiedo = 3f;      // NUEVO: cuánto dura Miedo antes de volver a Patrulla
+    [SerializeField] private float duracionMiedo = 3f;      // cuánto dura Miedo antes de volver a Patrulla
 
     [Header("Debug (solo lectura)")]
     [SerializeField] private string estadoActual = "Desconocido";
@@ -48,7 +48,7 @@ public class EnemigoController : MonoBehaviour
         estadoAttack.SetFSM(fsm);
         estadoMiedo.SetFSM(fsm);
 
-        
+        // Set transiciones de cada estado a cada estado
         estadoPatrulla.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoPatrulla.AddTransition(EnemyStates.Idle, estadoIdle);
         estadoPatrulla.AddTransition(EnemyStates.Attack, estadoAttack);
@@ -67,7 +67,7 @@ public class EnemigoController : MonoBehaviour
         estadoAttack.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoAttack.AddTransition(EnemyStates.Miedo, estadoMiedo);
 
-        // Salidas posibles desde Miedo (por si querés forzar desde afuera)
+        // Salidas posibles desde Miedo (no usamos)
         estadoMiedo.AddTransition(EnemyStates.Patrulla, estadoPatrulla);
         estadoMiedo.AddTransition(EnemyStates.Huir, estadoHuir);
         estadoMiedo.AddTransition(EnemyStates.Attack, estadoAttack);

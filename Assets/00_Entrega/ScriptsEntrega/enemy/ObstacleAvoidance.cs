@@ -10,8 +10,7 @@ public class ObstacleAvoidance : MonoBehaviour
     [SerializeField] private LayerMask mascaraObstaculos = ~0;
 
     [Header("Respuesta")]
-    [SerializeField] private float pesoEvitacion = 2.0f;
-    [SerializeField] private float atenuarFrente = 0.5f;
+    [SerializeField] private float pesoEvitacion = 2.0f; 
     [SerializeField] private bool forzarLateral = true;
     [Header("Depuración")]
     [SerializeField] private bool habilitarLogs = false;
@@ -31,8 +30,8 @@ public class ObstacleAvoidance : MonoBehaviour
             return Vector3.zero;
 
         // Dirección y distancia 
-        Vector3 dir = velocidadDeseada.normalized;
-        float lookAhead = rangoPrediccionBase;
+        Vector3 dir = velocidadDeseada.normalized; // adelante
+        float lookAhead = rangoPrediccionBase; // que tan adelante
 
         // spherecast adelante para ver si hay algo con lo que me voy a chocar
         if (Physics.SphereCast(transform.position, radio, dir, out RaycastHit hit, lookAhead, mascaraObstaculos, QueryTriggerInteraction.Ignore))
@@ -48,7 +47,7 @@ public class ObstacleAvoidance : MonoBehaviour
             if (normal.sqrMagnitude < 0.0001f)
                 normal = (transform.position - hit.point).normalized; // fallback
 
-            // si quiero forzar siempre lateral (izq/der) lo hago por cross
+            // si quiero forzar siempre lateral (izq/der) lo hago por cross es decir salgo perpendicular a un borde
             if (forzarLateral)
             {
                 Vector3 lateral = Vector3.Cross(Vector3.up, dir).normalized;
@@ -56,15 +55,10 @@ public class ObstacleAvoidance : MonoBehaviour
                 float lado = Mathf.Sign(Vector3.Dot(lateral, normal));
                 normal = lateral * lado;
             }
-            else
-            {
-                // si el obstaculo está muy de frente, atenúo para no girar tan brusco
-                float frontal = Mathf.Abs(Vector3.Dot(normal, dir));
-                normal *= Mathf.Lerp(1f, atenuarFrente, frontal);
-            }
+            
 
             // fuerzo en XZ y aplico el peso
-            Vector3 evitacion = normal * pesoEvitacion;
+            Vector3 evitacion = normal * pesoEvitacion; // el peso es cuanto me quiero mover
             evitacion.y = 0f;
             return evitacion;
         }
