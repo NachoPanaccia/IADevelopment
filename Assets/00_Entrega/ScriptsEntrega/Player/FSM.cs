@@ -1,17 +1,21 @@
-public class FSM
+public sealed class FSM
 {
-    public IState CurrentState { get; private set; }
+    public State CurrentState { get; private set; }
 
-    public void Initialize(IState startingState)
+    public void Initialize(State start)
     {
-        CurrentState = startingState;
+        CurrentState = start;
         CurrentState.Enter();
     }
 
-    public void ChangeState(IState newState)
+    public void ChangeState(State next)
     {
-        CurrentState.Exit();
-        CurrentState = newState;
-        CurrentState.Enter();
+        if (CurrentState == next) return;
+        CurrentState = next;
+        CurrentState?.Enter();
     }
+
+    // Se llaman desde PlayerController.Update / FixedUpdate
+    public void Execute() => CurrentState?.Execute();
+    public void FixedExecute() => CurrentState?.FixedExecute();
 }

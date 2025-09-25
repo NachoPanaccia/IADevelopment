@@ -5146,7 +5146,7 @@ MonoBehaviour:
   evitarCorteEsquinas: 1
   regenerarAutomaticamente: 1
   intervaloRegeneracion: 0.25
-  habilitarLogs: 1
+  habilitarLogs: 0
   dibujarConGizmos: 1
   radioEsferaGizmos: 0.15
   colorCaminable: {r: 0, g: 0.8, b: 0.25, a: 0.95}
@@ -7197,7 +7197,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6684923853512715279, guid: 3714b157112c8c44584d058ea2c1b0a4, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6684923853512715279, guid: 3714b157112c8c44584d058ea2c1b0a4, type: 3}
       propertyPath: m_LocalPosition.z
@@ -7231,7 +7231,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8810749076884751241, guid: 3714b157112c8c44584d058ea2c1b0a4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:

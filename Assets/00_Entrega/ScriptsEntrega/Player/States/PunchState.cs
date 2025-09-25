@@ -2,33 +2,24 @@ using UnityEngine;
 
 public class PunchState : State
 {
-    public PunchState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
+    public PunchState(PlayerController c, FSM f, PlayerModel m, PlayerView v) : base(c, f, m, v) { }
 
-    public override void Enter()
-    {
-        model.StepFactor(false);
-        player.Move(Vector3.zero);
-        view.PlayPunch();
-    }
+    public override void Enter() { view?.PlayPunch(); }
 
-    public override void HandleInput()
+    public override void Execute()
     {
-        model.InputVector = player.ReadMovementInput();
-    }
-
-    public override void LogicUpdate()
-    {
-        if (view.IsAnimFinished("Punch"))
+        if (view != null && view.IsFinished("Punch"))
         {
-            bool moving = model.InputVector.sqrMagnitude > 0.01f;
-            if (!moving)
-            {
-                fsm.ChangeState(player.Idle);
-                return;
-            }
+            var input = controller.ReadMovementInput();
+            if (input.sqrMagnitude < 0.001f) { fsm.ChangeState(controller.Idle); return; }
 
-            bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            fsm.ChangeState(runKey ? player.Run : player.Walk);
+            bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            fsm.ChangeState(run ? controller.Run : controller.Walk);
         }
+    }
+
+    public override void FixedExecute()
+    {
+        controller.Move(Vector3.zero, 0f); // quieto al golpear
     }
 }

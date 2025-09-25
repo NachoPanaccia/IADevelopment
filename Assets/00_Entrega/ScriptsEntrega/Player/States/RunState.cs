@@ -2,48 +2,27 @@ using UnityEngine;
 
 public class RunState : State
 {
-    public RunState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
+    Vector3 moveDir;
 
-    public override void Enter() => view.PlayRun();
+    public RunState(PlayerController c, FSM f, PlayerModel m, PlayerView v) : base(c, f, m, v) { }
 
-    public override void HandleInput()
+    public override void Enter() { view?.PlayRun(); }
+
+    public override void Execute()
     {
-        model.InputVector = player.ReadMovementInput();
+        if (Input.GetMouseButtonDown(0)) { fsm.ChangeState(controller.Punch); return; }
+
+        var input = controller.ReadMovementInput();
+        bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        if (input.sqrMagnitude < 0.001f) { fsm.ChangeState(controller.RunToStop); return; }
+        if (!shift) { fsm.ChangeState(controller.Walk); return; }
+
+        moveDir = controller.ToCameraSpace(input);
     }
 
-    public override void LogicUpdate()
+    public override void FixedExecute()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            fsm.ChangeState(player.Punch);
-            return;
-        }
-
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-        if (!moving)
-        {
-            fsm.ChangeState(player.RunToStop);
-            return;
-        }
-
-        if (moving && !runKey)
-        {
-            fsm.ChangeState(player.Walk);
-            return;
-        }
-    }
-
-    public override void PhysicsUpdate()
-    {
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        model.StepFactor(moving);
-
-        Vector3 worldDir = player.ToCameraSpace(model.InputVector);
-        float speed = model.GetSpeed(true);
-        player.Move(worldDir, speed);
-
-        view.SetSpeedParam(model.speedFactor * 3f);
+        controller.Move(moveDir, model.runSpeed);
     }
 }

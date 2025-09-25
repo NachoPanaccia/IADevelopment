@@ -1,41 +1,19 @@
-using UnityEngine;
-
 public class RunToStopState : State
 {
-    public RunToStopState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
+    public RunToStopState(PlayerController c, FSM f, PlayerModel m, PlayerView v) : base(c, f, m, v) { }
 
-    public override void Enter()
+    public override void Enter() { view?.PlayRunToStop(); }
+
+    public override void Execute()
     {
-        model.StepFactor(false);
-        player.Move(Vector3.zero, 0f);
-        view.PlayRunToStop();
+        // cuando termina la animación, pasamos a Idle
+        if (view != null && view.IsFinished("RunToStop"))
+            fsm.ChangeState(controller.Idle);
     }
 
-    public override void HandleInput()
+    public override void FixedExecute()
     {
-        model.InputVector = player.ReadMovementInput();
-    }
-
-    public override void LogicUpdate()
-    {
-        if (view.IsAnimFinished("RunToStop"))
-        {
-            bool moving = model.InputVector.sqrMagnitude > 0.01f;
-            if (!moving)
-            {
-                fsm.ChangeState(player.Idle);
-                return;
-            }
-
-            bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            fsm.ChangeState(runKey ? player.Run : player.Walk);
-        }
-    }
-
-    public override void PhysicsUpdate()
-    {
-        model.StepFactor(false);
-        view.SetSpeedParam(model.speedFactor * 3f);
-        player.Move(Vector3.zero, 0f);
+        // Sin movimiento durante la frenada
+        controller.Move(UnityEngine.Vector3.zero, 0f);
     }
 }

@@ -1,37 +1,40 @@
-using System.Linq;
 using UnityEngine;
 
 public class PlayerView : MonoBehaviour
 {
-    [SerializeField] private Animator animator;
-    [SerializeField] private Transform modelRoot;
+    [SerializeField] Animator animator;
+    [SerializeField] Transform modelRoot;
+    public Transform ModelRoot => modelRoot ? modelRoot : transform;
 
-    public Animator Animator => animator;
-    public Transform ModelRoot => modelRoot != null ? modelRoot : animator.transform;
+    // hashes (más robusto que comparar strings cada frame)
+    static readonly int IdleHash = Animator.StringToHash("Idle");
+    static readonly int WalkHash = Animator.StringToHash("Walk");
+    static readonly int RunHash = Animator.StringToHash("Run");
+    static readonly int RunToStopHash = Animator.StringToHash("RunToStop");
+    static readonly int PunchHash = Animator.StringToHash("Punch");
 
-    int speedHash;
-    bool hasSpeedParam;
+    public void PlayIdle() => Play(IdleHash);
+    public void PlayWalk() => Play(WalkHash);
+    public void PlayRun() => Play(RunHash);
+    public void PlayRunToStop() => Play(RunToStopHash);
+    public void PlayPunch() => Play(PunchHash);
 
-    void Awake()
+    void Play(int stateHash, float fade = 0.1f, int layer = 0)
     {
-        speedHash = Animator.StringToHash("Speed");
-        hasSpeedParam = animator != null && animator.parameters.Any(p => p.nameHash == speedHash);
+        if (!animator) return;
+        animator.CrossFade(stateHash, fade, layer);
     }
 
-    public void PlayIdle() => animator.CrossFade("Idle", 0.1f);
-    public void PlayWalk() => animator.CrossFade("Walk", 0.1f);
-    public void PlayRun() => animator.CrossFade("Run", 0.1f);
-    public void PlayRunToStop() => animator.CrossFade("RunToStop", 0.05f);
-    public void PlayPunch() => animator.CrossFade("Punch", 0.05f);
+    /// Devuelve true si la anim 'stateName' (no looping) ya terminó, sin transición.
+    public bool IsFinished(string stateName, int layer = 0)
+        => IsFinished(Animator.StringToHash(stateName), layer);
 
-    public void SetSpeedParam(float value)
+    public bool IsFinished(int stateHash, int layer = 0)
     {
-        if (hasSpeedParam) animator.SetFloat(speedHash, value);
-    }
-
-    public bool IsAnimFinished(string stateName)
-    {
-        var info = animator.GetCurrentAnimatorStateInfo(0);
-        return info.IsName(stateName) && info.normalizedTime >= 1f && !animator.IsInTransition(0);
+        if (!animator) return true;
+        var st = animator.GetCurrentAnimatorStateInfo(layer);
+        if (st.shortNameHash != stateHash) return false;     // aún no estamos en ese state
+        if (animator.IsInTransition(layer)) return false;    // si está transicionando, no contar
+        return st.normalizedTime >= 0.99f;                   // 0.99 para evitar bordes
     }
 }

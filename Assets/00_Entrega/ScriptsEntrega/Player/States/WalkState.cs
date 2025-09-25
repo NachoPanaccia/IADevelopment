@@ -2,43 +2,27 @@ using UnityEngine;
 
 public class WalkState : State
 {
-    public WalkState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
+    Vector3 moveDir;
 
-    public override void Enter() => view.PlayWalk();
+    public WalkState(PlayerController c, FSM f, PlayerModel m, PlayerView v) : base(c, f, m, v) { }
 
-    public override void HandleInput()
+    public override void Enter() { view?.PlayWalk(); }
+
+    public override void Execute()
     {
-        model.InputVector = player.ReadMovementInput();
+        if (Input.GetMouseButtonDown(0)) { fsm.ChangeState(controller.Punch); return; }
+
+        var input = controller.ReadMovementInput();
+        if (input.sqrMagnitude < 0.001f) { fsm.ChangeState(controller.Idle); return; }
+
+        bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        if (run) { fsm.ChangeState(controller.Run); return; }
+
+        moveDir = controller.ToCameraSpace(input);
     }
 
-    public override void LogicUpdate()
+    public override void FixedExecute()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            fsm.ChangeState(player.Punch);
-            return;
-        }
-
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        if (!moving)
-        {
-            fsm.ChangeState(player.Idle);
-            return;
-        }
-
-        bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-        if (runKey) fsm.ChangeState(player.Run);
-    }
-
-    public override void PhysicsUpdate()
-    {
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        model.StepFactor(moving);
-
-        Vector3 worldDir = player.ToCameraSpace(model.InputVector);
-        float speed = model.GetSpeed(false);
-        player.Move(worldDir, speed);
-
-        view.SetSpeedParam(model.speedFactor * 3f);
+        controller.Move(moveDir, model.walkSpeed);
     }
 }

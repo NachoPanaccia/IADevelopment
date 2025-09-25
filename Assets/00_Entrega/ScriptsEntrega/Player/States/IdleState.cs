@@ -2,34 +2,25 @@ using UnityEngine;
 
 public class IdleState : State
 {
-    public IdleState(PlayerController player, FSM fsm, PlayerModel model, PlayerView view) : base(player, fsm, model, view) { }
+    public IdleState(PlayerController c, FSM f, PlayerModel m, PlayerView v) : base(c, f, m, v) { }
 
-    public override void Enter()
+    public override void Enter() { view?.PlayIdle(); }
+
+    public override void Execute()
     {
-        view.PlayIdle();
-        view.SetSpeedParam(0f);
-        model.InputVector = Vector3.zero;
-        model.speedFactor = 0f;
+        if (Input.GetMouseButtonDown(0)) { fsm.ChangeState(controller.Punch); return; }
+
+        var input = controller.ReadMovementInput();
+        if (input.sqrMagnitude > 0.001f)
+        {
+            bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            fsm.ChangeState(run ? controller.Run : controller.Walk);
+        }
     }
 
-    public override void HandleInput()
+    public override void FixedExecute()
     {
-        model.InputVector = player.ReadMovementInput();
-    }
-
-    public override void LogicUpdate()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            fsm.ChangeState(player.Punch);
-            return;
-        }
-
-        bool moving = model.InputVector.sqrMagnitude > 0.01f;
-        if (moving)
-        {
-            bool runKey = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            fsm.ChangeState(runKey ? player.Run : player.Walk);
-        }
+        // frenar drift
+        controller.Move(Vector3.zero, 0f);
     }
 }
