@@ -15,7 +15,6 @@ public sealed class FSM
         CurrentState?.Enter();
     }
 
-    // Se llaman desde PlayerController.Update / FixedUpdate
     public void Execute() => CurrentState?.Execute();
     public void FixedExecute() => CurrentState?.FixedExecute();
 }

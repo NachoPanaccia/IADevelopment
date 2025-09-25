@@ -3,12 +3,16 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
+/// UI modal que aparece al abrir un cofre:
+/// - Muestra el nombre del premio y colorea según rareza.
+/// - Congela el juego (Time.timeScale = 0) y desbloquea el cursor.
+/// - Botones: “Volver a jugar” (01_Nivel) y “Menú principal”.
 public class ChestRewardUI : MonoBehaviour
 {
     [Header("Referencias UI (en el PANEL)")]
-    [SerializeField] private CanvasGroup group;
-    [SerializeField] private TMP_Text titleText;
-    [SerializeField] private TMP_Text bodyText;
+    [SerializeField] private CanvasGroup group;  // CanvasGroup del panel modal
+    [SerializeField] private TMP_Text titleText; // Título (Felicidades / vacío)
+    [SerializeField] private TMP_Text bodyText;  // Texto con el nombre del ítem
     [SerializeField] private Button replayButton;
     [SerializeField] private Button menuButton;
 
@@ -17,39 +21,55 @@ public class ChestRewardUI : MonoBehaviour
     [SerializeField] private string menuSceneName = "Menu Principal";
 
     [Header("Cursor")]
-    [SerializeField] private bool manageCursor = true;
+    [SerializeField] private bool manageCursor = true; // desbloquear/ocultar automáticamente
 
-    CursorLockMode _prevLock;
-    bool _prevVisible;
-    float _prevTimeScale = 1f;
-    bool _shown;
+    private CursorLockMode _prevLock;
+    private bool _prevVisible;
+    private float _prevTimeScale = 1f;
+    private bool _shown;
 
-    void Awake()
+    private void Awake()
     {
-        if (!group) group = GetComponent<CanvasGroup>();
+        if (!group)
+        {
+            group = GetComponent<CanvasGroup>();
+        }
         SetVisible(false, true);
 
-        if (replayButton) replayButton.onClick.AddListener(OnReplay);
-        if (menuButton) menuButton.onClick.AddListener(OnMenu);
+        if (replayButton)
+        {
+            replayButton.onClick.AddListener(OnReplay);
+        }
+        if (menuButton)
+        {
+            menuButton.onClick.AddListener(OnMenu);
+        }
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         ChestPressedLogic.OnRewardRolled += OnRewardRolled;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         ChestPressedLogic.OnRewardRolled -= OnRewardRolled;
     }
 
-    void OnRewardRolled(ChestDropDB.DropDef item, ChestPressedLogic.Rarity rarity)
+    /// Callback del evento global de loot: actualiza textos/colores y muestra el panel.
+    private void OnRewardRolled(ChestDropDB.DropDef item, ChestPressedLogic.Rarity rarity)
     {
-        if (_shown) return;
+        if (_shown)
+        {
+            return;
+        }
 
         if (rarity == ChestPressedLogic.Rarity.Nada)
         {
-            if (titleText) titleText.text = "¡HAZ ENCONTRADO EL COFRE! pero...";
+            if (titleText)
+            {
+                titleText.text = "¡Haz encontrado el cofre! pero...";
+            }
             if (bodyText)
             {
                 bodyText.text = "Lamentablemente estaba vacío, ¡mala suerte!";
@@ -58,7 +78,10 @@ public class ChestRewardUI : MonoBehaviour
         }
         else
         {
-            if (titleText) titleText.text = "¡Felicidades!";
+            if (titleText)
+            {
+                titleText.text = "¡Felicidades!";
+            }
             if (bodyText)
             {
                 bodyText.text = $"Has obtenido: {item.name}";
@@ -69,7 +92,7 @@ public class ChestRewardUI : MonoBehaviour
         Show();
     }
 
-    void Show()
+    private void Show()
     {
         _shown = true;
 
@@ -86,7 +109,7 @@ public class ChestRewardUI : MonoBehaviour
         SetVisible(true);
     }
 
-    void SetVisible(bool visible, bool immediate = false)
+    private void SetVisible(bool visible, bool immediate = false)
     {
         if (!group)
         {
@@ -99,40 +122,59 @@ public class ChestRewardUI : MonoBehaviour
         group.alpha = visible ? 1f : 0f;
     }
 
-    void OnReplay()
+    private void OnReplay()
     {
         RestoreCursor();
         Time.timeScale = 1f;
         SceneManager.LoadScene(levelSceneName);
     }
 
-    void OnMenu()
+    private void OnMenu()
     {
         RestoreCursor();
         Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
     }
 
-    void RestoreCursor()
+    private void RestoreCursor()
     {
-        if (!manageCursor) return;
+        if (!manageCursor)
+        {
+            return;
+        }
+
         Cursor.lockState = _prevLock;
         Cursor.visible = _prevVisible;
     }
 
-    Color GetColorFor(ChestPressedLogic.Rarity r)
+    private Color GetColorFor(ChestPressedLogic.Rarity r)
     {
         switch (r)
         {
-            case ChestPressedLogic.Rarity.Normal: return Color.white;
-            case ChestPressedLogic.Rarity.Rara: return Hex("#32CD32");
-            case ChestPressedLogic.Rarity.Epica: return Hex("#A020F0");
-            case ChestPressedLogic.Rarity.Legendaria: return Hex("#FFD700");
-            default: return new Color(0.8f, 0.8f, 0.8f);
+            case ChestPressedLogic.Rarity.Normal:
+                {
+                    return Color.white;           // Blanco
+                }
+            case ChestPressedLogic.Rarity.Rara:
+                {
+                    return Hex("#32CD32");       // Verde Lima
+                }
+            case ChestPressedLogic.Rarity.Epica:
+                {
+                    return Hex("#A020F0");       // Púrpura
+                }
+            case ChestPressedLogic.Rarity.Legendaria:
+                {
+                    return Hex("#FFD700");       // Dorado
+                }
+            default:
+                {
+                    return new Color(0.8f, 0.8f, 0.8f);
+                }
         }
     }
 
-    static Color Hex(string hex)
+    private static Color Hex(string hex)
     {
         ColorUtility.TryParseHtmlString(hex, out var c);
         return c;

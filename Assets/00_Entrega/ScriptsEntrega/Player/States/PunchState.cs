@@ -11,7 +11,11 @@ public class PunchState : State
         if (view != null && view.IsFinished("Punch"))
         {
             var input = controller.ReadMovementInput();
-            if (input.sqrMagnitude < 0.001f) { fsm.ChangeState(controller.Idle); return; }
+            if (input.sqrMagnitude < 0.001f)
+            { 
+                fsm.ChangeState(controller.Idle);
+                return; 
+            }
 
             bool run = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             fsm.ChangeState(run ? controller.Run : controller.Walk);
@@ -20,6 +24,6 @@ public class PunchState : State
 
     public override void FixedExecute()
     {
-        controller.Move(Vector3.zero, 0f); // quieto al golpear
+        controller.Move(Vector3.zero, 0f);
     }
 }

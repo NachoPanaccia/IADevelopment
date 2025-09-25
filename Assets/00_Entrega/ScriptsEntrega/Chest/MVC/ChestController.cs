@@ -1,33 +1,40 @@
 using System.Collections;
 using UnityEngine;
 
+// tira OnAnyChestOpened para que LevelManager sepa
 [RequireComponent(typeof(ChestView))]
 public class ChestController : MonoBehaviour, IInteractable
 {
     public static event System.Action<ChestController> OnAnyChestOpened;
 
     [Header("Referencias")]
-    [SerializeField] private ChestView view;
-    [SerializeField] private ChestPressedLogic pressedLogic;
+    [SerializeField] private ChestView view;                 // anim
+    [SerializeField] private ChestPressedLogic pressedLogic; // Ruleta y disparo del premio
     [SerializeField] private ChestPromptView promptView;
 
     [Header("Estado")]
     [SerializeField] private bool opened;
-    bool opening;
+    private bool opening;
 
     public Vector3 Position => transform.position;
 
-    void Reset()
+    private void Reset()
     {
         view = GetComponent<ChestView>();
         pressedLogic = GetComponent<ChestPressedLogic>();
         promptView = GetComponentInChildren<ChestPromptView>();
     }
 
-    void Awake()
+    private void Awake()
     {
-        if (!view) view = GetComponent<ChestView>();
-        if (!promptView) promptView = GetComponentInChildren<ChestPromptView>();
+        if (!view)
+        {
+            view = GetComponent<ChestView>();
+        }
+        if (!promptView)
+        {
+            promptView = GetComponentInChildren<ChestPromptView>();
+        }
 
         if (!opened)
         {
@@ -41,16 +48,23 @@ public class ChestController : MonoBehaviour, IInteractable
         }
     }
 
-    public bool CanInteract(Transform interactor) => !opened && !opening;
+    public bool CanInteract(Transform interactor)
+    {
+        return !opened && !opening;
+    }
 
     public void Interact(Transform interactor)
     {
-        if (!CanInteract(interactor)) return;
+        if (!CanInteract(interactor))
+        {
+            return;
+        }
+
         promptView?.SetPromptVisible(false);
         StartCoroutine(OpenRoutine());
     }
 
-    IEnumerator OpenRoutine()
+    private IEnumerator OpenRoutine()
     {
         opening = true;
 
@@ -63,7 +77,10 @@ public class ChestController : MonoBehaviour, IInteractable
 
         promptView?.SetPromptVisible(false);
 
-        if (pressedLogic) pressedLogic.OnChestPressed();
+        if (pressedLogic)
+        {
+            pressedLogic.OnChestPressed();
+        }
         OnAnyChestOpened?.Invoke(this);
     }
 }

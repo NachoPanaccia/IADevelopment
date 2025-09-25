@@ -6,14 +6,15 @@ public class RunToStopState : State
 
     public override void Execute()
     {
-        // cuando termina la animación, pasamos a Idle
+        // Cuando termina la animación, pasamos a Idle
         if (view != null && view.IsFinished("RunToStop"))
+        {
             fsm.ChangeState(controller.Idle);
+        }
     }
 
     public override void FixedExecute()
     {
-        // Sin movimiento durante la frenada
-        controller.Move(UnityEngine.Vector3.zero, 0f);
+        controller.Move(UnityEngine.Vector3.zero, 0f); // quieto durante la frenada
     }
 }

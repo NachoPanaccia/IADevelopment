@@ -4,11 +4,14 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Referencias")]
-    [SerializeField] private PlayerView view;
+    [SerializeField] private PlayerView view;   //capa visual
+
+    [Header("Datos")]
     public PlayerModel model = new PlayerModel();
 
     private IMove moveStrategy;
 
+    // FSM + estados
     private FSM fsm;
     private IdleState idleState;
     private WalkState walkState;
@@ -27,6 +30,7 @@ public class PlayerController : MonoBehaviour
 
         moveStrategy = new RigidbodyMove(rb, model, view ? view.ModelRoot : null);
 
+        // FSM + estados
         fsm = new FSM();
         idleState = new IdleState(this, fsm, model, view);
         walkState = new WalkState(this, fsm, model, view);
@@ -36,7 +40,6 @@ public class PlayerController : MonoBehaviour
     }
 
     void Start() => fsm.Initialize(idleState);
-
     void Update() => fsm.Execute();
     void FixedUpdate() => fsm.FixedExecute();
 
@@ -47,19 +50,23 @@ public class PlayerController : MonoBehaviour
         return new Vector3(h, 0f, v).normalized;
     }
 
+    /// Proyecta el input al espacio de cámara (mover “hacia donde miro”).
     public Vector3 ToCameraSpace(Vector3 inputDir)
     {
         if (inputDir.sqrMagnitude < 0.0001f) return Vector3.zero;
         var cam = Camera.main;
         if (!cam) return inputDir;
-        Vector3 fwd = Vector3.Scale(cam.transform.forward, new Vector3(1, 0, 1)).normalized;
-        Vector3 right = Vector3.Scale(cam.transform.right, new Vector3(1, 0, 1)).normalized;
-        return (fwd * inputDir.z + right * inputDir.x).normalized;
+
+        Vector3 camFwd = Vector3.Scale(cam.transform.forward, new Vector3(1, 0, 1)).normalized;
+        Vector3 camRight = Vector3.Scale(cam.transform.right, new Vector3(1, 0, 1)).normalized;
+        return (camFwd * inputDir.z + camRight * inputDir.x).normalized;
     }
 
     public void Move(Vector3 worldDir) => moveStrategy.Move(worldDir, model.walkSpeed);
+
     public void Move(Vector3 worldDir, float speed) => moveStrategy.Move(worldDir, speed);
 
+    // Accesos a los estados
     public IdleState Idle => idleState;
     public WalkState Walk => walkState;
     public RunState Run => runState;

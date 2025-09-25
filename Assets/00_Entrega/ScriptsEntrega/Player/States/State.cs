@@ -1,5 +1,7 @@
 using UnityEngine;
 
+/// Base común para todos los estados de la FSM.
+// da acceso a controller/model/view
 public abstract class State : IState
 {
     protected readonly PlayerController controller;
@@ -17,5 +19,5 @@ public abstract class State : IState
 
     public virtual void Enter() { }
     public abstract void Execute();
-    public virtual void FixedExecute() { } 
+    public virtual void FixedExecute() { }
 }

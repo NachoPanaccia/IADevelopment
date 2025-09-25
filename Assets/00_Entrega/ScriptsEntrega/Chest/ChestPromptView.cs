@@ -13,25 +13,35 @@ public class ChestPromptView : MonoBehaviour, IShowPrompt
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.2f, 0f);
     [SerializeField] private bool faceCameraInWorldSpace = true;
 
-    Transform _self;
-    TMP_Text _label;
-    Canvas _canvas;
-    RectTransform _canvasRect;
-    bool _visible;
+    private Transform _self;
+    private TMP_Text _label;
+    private Canvas _canvas;
+    private RectTransform _canvasRect;
+    private bool _visible;
 
-    void Reset()
+    private void Reset()
     {
         var child = transform.Find("Prompt");
-        if (child) promptRect = child as RectTransform;
+        if (child)
+        {
+            promptRect = child as RectTransform;
+        }
     }
 
-    void Awake()
+    private void Awake()
     {
         _self = transform;
-        if (!promptRect) return;
+
+        if (!promptRect)
+        {
+            return;
+        }
 
         _label = promptRect.GetComponentInChildren<TMP_Text>(true);
-        if (_label) _label.text = message;
+        if (_label)
+        {
+            _label.text = message;
+        }
 
         _canvas = promptRect.GetComponentInParent<Canvas>(true);
         _canvasRect = _canvas ? _canvas.transform as RectTransform : null;
@@ -39,9 +49,12 @@ public class ChestPromptView : MonoBehaviour, IShowPrompt
         SetPromptVisible(false);
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        if (!_visible || !promptRect) return;
+        if (!_visible || !promptRect)
+        {
+            return;
+        }
 
         Vector3 worldPos = _self.position + worldOffset;
 
@@ -68,7 +81,8 @@ public class ChestPromptView : MonoBehaviour, IShowPrompt
             if (Camera.main && _canvasRect)
             {
                 Vector3 screen = Camera.main.WorldToScreenPoint(worldPos);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, screen, _canvas.worldCamera, out var local);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _canvasRect, screen, _canvas.worldCamera, out var local);
                 promptRect.anchoredPosition = local;
             }
         }
@@ -77,6 +91,10 @@ public class ChestPromptView : MonoBehaviour, IShowPrompt
     public void SetPromptVisible(bool visible)
     {
         _visible = visible && promptRect != null;
-        if (promptRect) promptRect.gameObject.SetActive(_visible);
+
+        if (promptRect)
+        {
+            promptRect.gameObject.SetActive(_visible);
+        }
     }
 }

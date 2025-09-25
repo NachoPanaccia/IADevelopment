@@ -1,5 +1,6 @@
 using UnityEngine;
 
+/// Datos del jugador sin lógica.
 [System.Serializable]
 public class PlayerModel
 {

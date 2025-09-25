@@ -1,5 +1,8 @@
 using UnityEngine;
 
+// Implementación de IMove usando Rigidbody
+// Avanza con MovePosition en FixedUpdate
+
 public class RigidbodyMove : IMove
 {
     readonly Rigidbody rb;
@@ -11,6 +14,7 @@ public class RigidbodyMove : IMove
         this.rb = rb;
         this.model = model;
         this.visual = visualRoot ? visualRoot : rb.transform;
+
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 

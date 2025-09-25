@@ -10,13 +10,26 @@ public class RunState : State
 
     public override void Execute()
     {
-        if (Input.GetMouseButtonDown(0)) { fsm.ChangeState(controller.Punch); return; }
+        if (Input.GetMouseButtonDown(0))
+        { 
+            fsm.ChangeState(controller.Punch); 
+            return; 
+        }
 
         var input = controller.ReadMovementInput();
         bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-        if (input.sqrMagnitude < 0.001f) { fsm.ChangeState(controller.RunToStop); return; }
-        if (!shift) { fsm.ChangeState(controller.Walk); return; }
+        if (input.sqrMagnitude < 0.001f)
+        { 
+            fsm.ChangeState(controller.RunToStop);
+            return; 
+        }
+
+        if (!shift)
+        { 
+            fsm.ChangeState(controller.Walk); 
+            return; 
+        }
 
         moveDir = controller.ToCameraSpace(input);
     }

@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class PlayerView : MonoBehaviour
 {
-    [SerializeField] Animator animator;
-    [SerializeField] Transform modelRoot;
+    [SerializeField] Animator animator;     // Animator del prefab visual
+    [SerializeField] Transform modelRoot;   // Raíz visual (para rotar el modelo)
     public Transform ModelRoot => modelRoot ? modelRoot : transform;
 
-    // hashes (más robusto que comparar strings cada frame)
+    // evita preguntar por nombres enb cada frame
     static readonly int IdleHash = Animator.StringToHash("Idle");
     static readonly int WalkHash = Animator.StringToHash("Walk");
     static readonly int RunHash = Animator.StringToHash("Run");
@@ -25,16 +25,14 @@ public class PlayerView : MonoBehaviour
         animator.CrossFade(stateHash, fade, layer);
     }
 
-    /// Devuelve true si la anim 'stateName' (no looping) ya terminó, sin transición.
-    public bool IsFinished(string stateName, int layer = 0)
-        => IsFinished(Animator.StringToHash(stateName), layer);
+    public bool IsFinished(string stateName, int layer = 0) => IsFinished(Animator.StringToHash(stateName), layer);
 
     public bool IsFinished(int stateHash, int layer = 0)
     {
         if (!animator) return true;
         var st = animator.GetCurrentAnimatorStateInfo(layer);
-        if (st.shortNameHash != stateHash) return false;     // aún no estamos en ese state
-        if (animator.IsInTransition(layer)) return false;    // si está transicionando, no contar
-        return st.normalizedTime >= 0.99f;                   // 0.99 para evitar bordes
+        if (st.shortNameHash != stateHash) return false; // aún no estamos en ese state
+        if (animator.IsInTransition(layer)) return false; // no contar si está transicionando
+        return st.normalizedTime >= 0.99f;                 // 1.0 = fin; 0.99 evita bordes
     }
 }

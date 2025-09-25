@@ -8,7 +8,8 @@ public class IdleState : State
 
     public override void Execute()
     {
-        if (Input.GetMouseButtonDown(0)) { fsm.ChangeState(controller.Punch); return; }
+        if (Input.GetMouseButtonDown(0))
+        { fsm.ChangeState(controller.Punch); return; }
 
         var input = controller.ReadMovementInput();
         if (input.sqrMagnitude > 0.001f)
@@ -18,9 +19,8 @@ public class IdleState : State
         }
     }
 
-    public override void FixedExecute()
+    public override void FixedExecute() // por las dudas dejamos la velocidad en 0, para evitar desplazamientos.
     {
-        // frenar drift
         controller.Move(Vector3.zero, 0f);
     }
 }
