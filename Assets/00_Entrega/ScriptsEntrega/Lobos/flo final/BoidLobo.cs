@@ -8,11 +8,10 @@ public class BoidLobo : MonoBehaviour
     EntidadSteering steering;
     GestorFlocking gf;
 
-    // Exposición pública simple (sin reflección)
     public Vector3 VelocidadActual => steering != null ? steering.Velocidad : Vector3.zero;
     public float VelocidadMaxima => steering != null ? steering.VelocidadMaxima : 6f;
 
-    // Proxies para que los comportamientos puedan usar Seek/Steer sin tocar EntidadSteering
+    // Proxies
     public Vector3 Seek(Vector3 posicion) => steering != null ? steering.Seek(posicion) : Vector3.zero;
     public Vector3 Steer(Vector3 deseado) => steering != null ? steering.Steer(deseado) : Vector3.zero;
     public void AddFuerza(Vector3 fuerza) { if (steering != null) steering.AddFuerza(fuerza); }
@@ -22,11 +21,10 @@ public class BoidLobo : MonoBehaviour
     {
         steering = GetComponent<EntidadSteering>();
         gf = GestorFlocking.Instance;
-
         gf?.AgregarBoid(this);
 
-        // Empuje inicial aleatorio suave
-        var rnd = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)).normalized * (VelocidadMaxima * 0.5f);
+        // arranque suave
+        var rnd = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)).normalized * (VelocidadMaxima * 0.4f);
         AddFuerza(rnd);
     }
 
@@ -44,7 +42,7 @@ public class BoidLobo : MonoBehaviour
 
         Vector3 fuerzaTotal = Vector3.zero;
 
-        // 1) Separación / Cohesión / Alineación (si existen)
+        // Flocking base (estilo profe)
         var compSep = GetComponent<ComportamientoSeparacion>();
         if (compSep) fuerzaTotal += compSep.ObtenerDireccion(todos) * gf.pesoSeparacion;
 
@@ -54,14 +52,13 @@ public class BoidLobo : MonoBehaviour
         var compAli = GetComponent<ComportamientoAlineacion>();
         if (compAli) fuerzaTotal += compAli.ObtenerDireccion(todos) * gf.pesoAlineacion;
 
-        // 2) Seguir Líder / Objetivo (nuevo comportamiento)
-        if (gf.UsarObjetivoBandada)
+        // Objetivo común (sin offsets)
+        if (gf.usarObjetivoGlobal)
         {
-            var compSeguir = GetComponent<ComportamientoSeguirLider>();
-            if (compSeguir) fuerzaTotal += compSeguir.ObtenerDireccion(todos) * gf.pesoObjetivo;
+            var compObj = GetComponent<ComportamientoObjetivoComun>();
+            if (compObj) fuerzaTotal += compObj.ObtenerDireccion(todos) * gf.pesoObjetivo;
         }
 
-        // 3) Aplicar y mover (estilo profe)
         AddFuerza(fuerzaTotal);
         Mover();
     }

@@ -2,9 +2,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Comportamiento de flocking que hace SEEK hacia el líder (con un offset en anillo)
-/// o hacia el objetivo de alerta de la bandada.
-/// Mantiene el estilo "profe": solo devuelve un vector de steering; no mueve por sí solo.
+/// Seek hacia el líder (con offset en anillo) o hacia el objetivo de alerta.
+/// Con la opción "seguirSiempreAlLider", ignora la alerta y lo sigue SIEMPRE.
 /// </summary>
 [RequireComponent(typeof(BoidLobo))]
 public class ComportamientoSeguirLider : MonoBehaviour, IFlockingComportamiento
@@ -13,9 +12,20 @@ public class ComportamientoSeguirLider : MonoBehaviour, IFlockingComportamiento
     GestorFlocking gf;
     BandadaLobos bandada;
 
-    // Offset estable por lobo para formarse alrededor del líder (evita amontonamiento)
-    [SerializeField] float multiplicadorAnillo = 1.0f; // 1 = usa DistanciaComodaAlLider tal cual
-    Vector3 offsetLocalAnillo; // en espacio local del líder (se rota con él)
+    [Header("Seguir siempre al líder (ignorar alerta)")]
+    [SerializeField] bool seguirSiempreAlLider = true;
+
+    [Header("Anillo alrededor del líder")]
+    [Tooltip("Factor para encoger/agrandar el anillo relativo a GestorFlocking.DistanciaComodaAlLider (1 = igual, <1 más cerca).")]
+    [SerializeField] float multiplicadorDistancia = 0.6f;
+
+    [Header("Tirón extra al líder")]
+    [SerializeField, Range(0f, 3f)] float fuerzaExtraCercania = 0.9f;
+
+    [Header("Seguir detrás del líder (opcional)")]
+    [SerializeField] float seguirDetrasDistancia = 0.8f;
+
+    Vector3 offsetLocalAnillo;
 
     void Awake()
     {
@@ -27,7 +37,9 @@ public class ComportamientoSeguirLider : MonoBehaviour, IFlockingComportamiento
         int seed = GetInstanceID();
         Random.InitState(seed);
 
-        float r = (gf != null ? gf.DistanciaComodaAlLider : 3.5f) * multiplicadorAnillo;
+        float rBase = (gf != null ? gf.DistanciaComodaAlLider : 3.5f);
+        float r = Mathf.Max(0.1f, rBase * Mathf.Max(0.1f, multiplicadorDistancia));
+
         float ang = Random.Range(0f, Mathf.PI * 2f);
         offsetLocalAnillo = new Vector3(Mathf.Cos(ang) * r, 0f, Mathf.Sin(ang) * r);
     }
@@ -38,22 +50,48 @@ public class ComportamientoSeguirLider : MonoBehaviour, IFlockingComportamiento
         if (gf == null) return Vector3.zero;
 
         if (bandada == null) bandada = gf.Bandada;
-        if (bandada == null) return Vector3.zero;
+        if (bandada == null || bandada.Lider == null) return Vector3.zero;
 
-        // Si hay alerta, todos buscan el objetivo común (última posición vista del jugador)
-        if (bandada.AlertaActiva)
+        var lider = bandada.Lider;
+
+        // Si NO queremos ignorar alerta y está activa, ir al objetivo común
+        if (!seguirSiempreAlLider && bandada.AlertaActiva)
         {
             return boid.Seek(bandada.ObjetivoAlerta);
         }
 
-        // Sin alerta: seguir/merodear al líder con offset en anillo
-        if (bandada.Lider == null) return Vector3.zero;
+        // Recalcular radio del anillo si se modificó en runtime
+        float rBase = Mathf.Max(0.1f, gf.DistanciaComodaAlLider);
+        float r = Mathf.Max(0.1f, rBase * Mathf.Max(0.1f, multiplicadorDistancia));
+        offsetLocalAnillo = offsetLocalAnillo.sqrMagnitude > 0.0001f ? offsetLocalAnillo.normalized * r : new Vector3(r, 0f, 0f);
 
-        // Transformar el offset local a mundo según la orientación del líder
-        var lider = bandada.Lider;
+        // Offset girado con el líder + un pequeño desplazamiento hacia atrás
         Vector3 offsetMundo = lider.rotation * offsetLocalAnillo;
-        Vector3 target = lider.position + offsetMundo;
+        Vector3 detras = Vector3.zero;
+        if (seguirDetrasDistancia > 0.001f)
+        {
+            Vector3 back = -(new Vector3(lider.forward.x, 0f, lider.forward.z)).normalized;
+            detras = back * seguirDetrasDistancia;
+        }
 
-        return boid.Seek(target);
+        Vector3 target = lider.position + offsetMundo + detras;
+
+        // 1) Seek al target del anillo
+        Vector3 v = boid.Seek(target);
+
+        // 2) Tirón extra directo al líder (pega más)
+        if (fuerzaExtraCercania > 0.001f)
+        {
+            Vector3 haciaLider = (lider.position - transform.position);
+            haciaLider.y = 0f;
+            if (haciaLider.sqrMagnitude > 0.0001f)
+            {
+                Vector3 deseado = haciaLider.normalized * boid.VelocidadMaxima;
+                v += boid.Steer(deseado) * fuerzaExtraCercania;
+            }
+        }
+
+        return v;
     }
 }
+
