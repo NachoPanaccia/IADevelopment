@@ -2,14 +2,14 @@
 using UnityEngine;
 
 /// <summary>
-/// Integra fuerzas de steering y mueve el transform en el plano XZ.
+/// Integra fuerzas de steering y mueve el transform.
 /// </summary>
 public class EntidadSteering : MonoBehaviour
 {
     [Header("Movimiento")]
     [SerializeField] float velocidadMaxima = 7f;
     [SerializeField] float fuerzaMaxima = 12f;
-    [SerializeField] float friccion = 0.0f; // 0 = sin desaceleración artificial
+    
 
     Vector3 velocidad;
     Vector3 acumuladorFuerza;
@@ -44,10 +44,6 @@ public class EntidadSteering : MonoBehaviour
         // Integración simple
         Vector3 aceleracion = acumuladorFuerza;
         velocidad += aceleracion * Time.deltaTime;
-
-        // Fricción opcional
-        if (friccion > 0f)
-            velocidad = Vector3.Lerp(velocidad, Vector3.zero, friccion * Time.deltaTime);
 
         // Clamp de velocidad
         velocidad = Vector3.ClampMagnitude(velocidad, velocidadMaxima);

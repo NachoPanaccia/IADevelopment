@@ -1,4 +1,4 @@
-// Archivo: GestorFlocking.cs
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,19 +16,19 @@ public class GestorFlocking : MonoBehaviour
     [SerializeField, Range(0f, 3f)] public float pesoAlineacion = 1.1f;
     [SerializeField, Range(0f, 3f)] public float pesoObjetivo = 1.8f;
 
-    // Enums (no poner [Header] encima de enums)
+   
     public enum ModoPatrulla { Circular, PingPong, Aleatorio }
 
     [Header("Objetivo global (mover como grupo)")]
     [SerializeField] public bool usarObjetivoGlobal = true;
-    [SerializeField] public Transform[] puntosPatrulla;       // waypoints en la escena
+    [SerializeField] public Transform[] puntosPatrulla;       // waypoints 
     [SerializeField] public ModoPatrulla modoPatrulla = ModoPatrulla.PingPong;
     [SerializeField, Min(0.2f)] public float distanciaCambioPunto = 1.4f;
 
     [Tooltip("Porcentaje de boids dentro del radio para avanzar al siguiente punto (0.6 = 60%)")]
     [SerializeField, Range(0.1f, 1f)] public float porcentajeParaCambiar = 0.7f;
 
-    // Estado interno (un índice único para TODOS los boids)
+   
     [SerializeField] int indicePuntoActual = 0;
     bool pingPongHaciaAdelante = true;
 

@@ -13,7 +13,7 @@ public class ObstacleAvoidance : MonoBehaviour
     [SerializeField] private float pesoEvitacion = 2.0f; 
     [SerializeField] private bool forzarLateral = true;
     [Header("Depuración")]
-    [SerializeField] private bool habilitarLogs = false;
+    
     [SerializeField] private bool dibujarGizmos = true;
 
     private Vector3 ultimaVelocidad;

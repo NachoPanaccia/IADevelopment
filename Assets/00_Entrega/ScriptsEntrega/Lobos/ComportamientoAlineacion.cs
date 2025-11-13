@@ -1,6 +1,6 @@
-// Archivo: ComportamientoAlineacion.cs
 using System.Collections.Generic;
 using UnityEngine;
+
 
 /// <summary>
 /// Ajusta la dirección/velocidad del boid hacia la media de sus vecinos.

@@ -35,7 +35,7 @@ public class ProbarRuta : MonoBehaviour
 
     void Update()
     {
-        // 1) Localizar objetivo si aparece en runtime (sin Find() cada frame)
+        // 1) Localizar objetivo si aparece en runtime ( intento para 
         if (habilitarBusquedaObjetivo && objetivo == null)
         {
             acumuladorBusqueda += Time.deltaTime;
@@ -65,7 +65,7 @@ public class ProbarRuta : MonoBehaviour
             return;
         }
 
-        // 2) (Opcional) regenerar el grafo si es dinámico alrededor del jugador
+        
         grafo.generarGrafo();
 
         // 3) Buscar nodos más cercanos

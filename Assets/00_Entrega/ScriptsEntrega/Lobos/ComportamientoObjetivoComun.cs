@@ -1,9 +1,9 @@
-// Archivo: ComportamientoObjetivoComun.cs
+
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Todos los boids hacen seek al MISMO objetivo global (definido por GestorFlocking).
+/// Todos los boids hacen seek al MISMO objetivo global.
 /// </summary>
 [RequireComponent(typeof(BoidLobo))]
 public class ComportamientoObjetivoComun : MonoBehaviour, IFlockingComportamiento

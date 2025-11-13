@@ -1,9 +1,9 @@
-// Archivo: ComportamientoCohesion.cs
 using System.Collections.Generic;
 using UnityEngine;
 
+
 /// <summary>
-/// Mueve al boid hacia el centro de masa de sus vecinos (mantiene el grupo unido).
+/// Mueve al boid hacia el centro de masa de sus vecinos .
 /// </summary>
 [RequireComponent(typeof(BoidLobo))]
 public class ComportamientoCohesion : MonoBehaviour, IFlockingComportamiento

@@ -1,9 +1,9 @@
-// Archivo: ComportamientoSeparacion.cs
+
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Aleja al boid de sus vecinos más cercanos (evita choques).
+/// Aleja al boid de sus vecinos más cercanos .
 /// </summary>
 [RequireComponent(typeof(BoidLobo))]
 public class ComportamientoSeparacion : MonoBehaviour, IFlockingComportamiento

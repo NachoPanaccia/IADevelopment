@@ -70,7 +70,7 @@ public static class Pathfinder
         return visitados;
     }
 
-    // ====== DIJKSTRA ======
+    // DIKSTRA
     public static List<NodoGrafo> dijkstra(NodoGrafo inicio, NodoGrafo destino)
     {
         var vacio = new List<NodoGrafo>();
@@ -124,7 +124,7 @@ public static class Pathfinder
         return reconstruirCamino(destino);
     }
 
-    // ====== A* ======
+    //  AStar 
     public static List<NodoGrafo> aStar(NodoGrafo inicio, NodoGrafo destino)
     {
         var vacio = new List<NodoGrafo>();
@@ -132,7 +132,7 @@ public static class Pathfinder
 
         var todos = recolectarDesde(inicio);
 
-        // g = distancia, f = g + h (lo llevamos aparte)
+        // g = distancia, f = g + h 
         var fScore = new Dictionary<NodoGrafo, float>(todos.Count);
 
         foreach (var n in todos)
@@ -189,78 +189,5 @@ public static class Pathfinder
         return vacio;
     }
 
-    // ====== THETA* (opcional, línea de vista) ======
-    public static List<NodoGrafo> thetaStar(NodoGrafo inicio, NodoGrafo destino)
-    {
-        var vacio = new List<NodoGrafo>();
-        if (inicio == null || destino == null) return vacio;
-
-        var todos = recolectarDesde(inicio);
-        var fScore = new Dictionary<NodoGrafo, float>(todos.Count);
-
-        foreach (var n in todos)
-        {
-            n.distancia = float.MaxValue; // g
-            n.previo = null;
-            fScore[n] = float.MaxValue;
-        }
-
-        inicio.distancia = 0f;
-        fScore[inicio] = heuristica(inicio, destino);
-        inicio.previo = inicio; // parent de la raíz es ella misma
-
-        var abiertos = new List<NodoGrafo> { inicio };
-        var cerrados = new HashSet<NodoGrafo>();
-
-        while (abiertos.Count > 0)
-        {
-            int idxMin = 0;
-            float minF = fScore[abiertos[0]];
-            for (int i = 1; i < abiertos.Count; i++)
-            {
-                float f = fScore[abiertos[i]];
-                if (f < minF) { minF = f; idxMin = i; }
-            }
-
-            var actual = abiertos[idxMin];
-            if (actual == destino) return reconstruirCamino(destino);
-
-            abiertos.RemoveAt(idxMin);
-            cerrados.Add(actual);
-
-            foreach (var v in actual.vecinos)
-            {
-                if (v == null || cerrados.Contains(v)) continue;
-
-                // Parent candidate = parent(actual) si hay línea de vista
-                NodoGrafo padre = actual.previo != null ? actual.previo : actual;
-
-                float nuevoG;
-                NodoGrafo nuevoPadre;
-
-                if (padre != null && tieneLineaVista(padre.posicion, v.posicion))
-                {
-                    nuevoG = padre.distancia + costoEntre(padre, v);
-                    nuevoPadre = padre;
-                }
-                else
-                {
-                    nuevoG = actual.distancia + costoEntre(actual, v);
-                    nuevoPadre = actual;
-                }
-
-                if (nuevoG < v.distancia)
-                {
-                    v.distancia = nuevoG;
-                    v.previo = nuevoPadre;
-                    fScore[v] = nuevoG + heuristica(v, destino);
-
-                    if (!abiertos.Contains(v))
-                        abiertos.Add(v);
-                }
-            }
-        }
-
-        return vacio;
-    }
+    
 }

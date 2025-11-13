@@ -1,6 +1,6 @@
-// Archivo: BoidLobo.cs
 using System.Collections.Generic;
 using UnityEngine;
+
 
 [RequireComponent(typeof(EntidadSteering))]
 public class BoidLobo : MonoBehaviour
