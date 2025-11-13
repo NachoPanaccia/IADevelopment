@@ -1,27 +1,86 @@
+// Archivo: Pathfinder.cs
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Algoritmos de pathfinding. Implementación robusta de Dijkstra.
+/// Algoritmos de pathfinding sobre NodoGrafo.
+/// Incluye Dijkstra, A* y Theta* (opcional, requiere línea de vista configurada).
 /// </summary>
 public static class Pathfinder
 {
+    // ====== Config para Theta* (opcional) ======
+    static LayerMask capaObstaculos = default;
+    static float alturaLineaVista = 0.5f;
+
     /// <summary>
-    /// Calcula el camino más corto entre inicio y destino (si existe).
-    /// Devuelve lista vacía si el destino no es alcanzable.
+    /// Configura la capa de obstáculos y la altura a la que se raycastea para línea de vista (Theta*).
     /// </summary>
+    public static void configurarLineaVista(LayerMask capa, float alturaVista = 0.5f)
+    {
+        capaObstaculos = capa;
+        alturaLineaVista = alturaVista;
+    }
+
+    static bool tieneLineaVista(Vector3 a, Vector3 b)
+    {
+        // Si no hay capa configurada, asumimos que sí hay línea de vista (para no romper)
+        if (capaObstaculos == default) return true;
+        Vector3 pa = a + Vector3.up * alturaLineaVista;
+        Vector3 pb = b + Vector3.up * alturaLineaVista;
+        return !Physics.Linecast(pa, pb, capaObstaculos);
+    }
+
+    // ====== Utilidades comunes ======
+    static float costoEntre(NodoGrafo a, NodoGrafo b)
+    {
+        return Vector3.Distance(a.posicion, b.posicion);
+    }
+
+    static float heuristica(NodoGrafo a, NodoGrafo b)
+    {
+        // Euclidiana: consistente en grillas con distancias euclidianas
+        return Vector3.Distance(a.posicion, b.posicion);
+    }
+
+    static List<NodoGrafo> reconstruirCamino(NodoGrafo destino)
+    {
+        var lista = new List<NodoGrafo>();
+        var n = destino;
+        while (n != null)
+        {
+            lista.Insert(0, n);
+            n = n.previo;
+        }
+        return lista;
+    }
+
+    static HashSet<NodoGrafo> recolectarDesde(NodoGrafo inicio)
+    {
+        var visitados = new HashSet<NodoGrafo>();
+        var cola = new Queue<NodoGrafo>();
+        cola.Enqueue(inicio);
+        while (cola.Count > 0)
+        {
+            var act = cola.Dequeue();
+            if (act == null || visitados.Contains(act)) continue;
+            visitados.Add(act);
+            foreach (var v in act.vecinos)
+                if (v != null) cola.Enqueue(v);
+        }
+        return visitados;
+    }
+
+    // DIKSTRA
     public static List<NodoGrafo> dijkstra(NodoGrafo inicio, NodoGrafo destino)
     {
-        var resultadoVacio = new List<NodoGrafo>();
-        if (inicio == null || destino == null) return resultadoVacio;
+        var vacio = new List<NodoGrafo>();
+        if (inicio == null || destino == null) return vacio;
 
-        // Recolecto el subgrafo alcanzable desde "inicio"
-        var todos = obtenerTodos(inicio);
+        var todos = recolectarDesde(inicio);
 
-        // Inicializo costos
         foreach (var n in todos)
         {
-            n.distancia = float.MaxValue;
+            n.distancia = float.MaxValue; // usamos "distancia" como gCost
             n.previo = null;
         }
         inicio.distancia = 0f;
@@ -31,7 +90,6 @@ public static class Pathfinder
 
         while (abiertos.Count > 0)
         {
-            // Tomo el de menor distancia
             int idxMin = 0;
             float min = abiertos[0].distancia;
             for (int i = 1; i < abiertos.Count; i++)
@@ -47,14 +105,13 @@ public static class Pathfinder
             abiertos.RemoveAt(idxMin);
             cerrados.Add(actual);
 
-            if (actual == destino) break; // llegamos: corto
+            if (actual == destino) break;
 
-            // Relajo vecinos
             foreach (var v in actual.vecinos)
             {
                 if (v == null || cerrados.Contains(v)) continue;
 
-                float nuevo = actual.distancia + Vector3.Distance(actual.posicion, v.posicion);
+                float nuevo = actual.distancia + costoEntre(actual, v);
                 if (nuevo < v.distancia)
                 {
                     v.distancia = nuevo;
@@ -63,40 +120,74 @@ public static class Pathfinder
             }
         }
 
-        // Si destino no tiene "previo" (y no es igual a inicio), no hay camino
-        if (destino != inicio && destino.previo == null)
-            return resultadoVacio;
-
-        // Reconstruyo
-        var camino = new List<NodoGrafo>();
-        var nodo = destino;
-        while (nodo != null)
-        {
-            camino.Insert(0, nodo);
-            nodo = nodo.previo;
-        }
-        return camino;
+        if (destino != inicio && destino.previo == null) return vacio;
+        return reconstruirCamino(destino);
     }
 
-    /// <summary>
-    /// BFS para recolectar todos los nodos alcanzables desde "inicio".
-    /// </summary>
-    static HashSet<NodoGrafo> obtenerTodos(NodoGrafo inicio)
+    //  AStar 
+    public static List<NodoGrafo> aStar(NodoGrafo inicio, NodoGrafo destino)
     {
-        var visitados = new HashSet<NodoGrafo>();
-        var cola = new Queue<NodoGrafo>();
-        cola.Enqueue(inicio);
+        var vacio = new List<NodoGrafo>();
+        if (inicio == null || destino == null) return vacio;
 
-        while (cola.Count > 0)
+        var todos = recolectarDesde(inicio);
+
+        // g = distancia, f = g + h 
+        var fScore = new Dictionary<NodoGrafo, float>(todos.Count);
+
+        foreach (var n in todos)
         {
-            var actual = cola.Dequeue();
-            if (actual == null || visitados.Contains(actual)) continue;
-
-            visitados.Add(actual);
-            foreach (var v in actual.vecinos)
-                if (v != null) cola.Enqueue(v);
+            n.distancia = float.MaxValue; // g
+            n.previo = null;
+            fScore[n] = float.MaxValue;
         }
 
-        return visitados;
+        inicio.distancia = 0f;
+        fScore[inicio] = heuristica(inicio, destino);
+
+        var abiertos = new List<NodoGrafo> { inicio };
+        var cerrados = new HashSet<NodoGrafo>();
+
+        while (abiertos.Count > 0)
+        {
+            // Tomo el de menor f
+            int idxMin = 0;
+            float minF = fScore[abiertos[0]];
+            for (int i = 1; i < abiertos.Count; i++)
+            {
+                float f = fScore[abiertos[i]];
+                if (f < minF)
+                {
+                    minF = f;
+                    idxMin = i;
+                }
+            }
+
+            var actual = abiertos[idxMin];
+            if (actual == destino) return reconstruirCamino(destino);
+
+            abiertos.RemoveAt(idxMin);
+            cerrados.Add(actual);
+
+            foreach (var v in actual.vecinos)
+            {
+                if (v == null || cerrados.Contains(v)) continue;
+
+                float tentativeG = actual.distancia + costoEntre(actual, v);
+                if (tentativeG < v.distancia)
+                {
+                    v.previo = actual;
+                    v.distancia = tentativeG;
+                    fScore[v] = tentativeG + heuristica(v, destino);
+
+                    if (!abiertos.Contains(v))
+                        abiertos.Add(v);
+                }
+            }
+        }
+
+        return vacio;
     }
+
+    
 }
